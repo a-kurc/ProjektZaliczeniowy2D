@@ -9,6 +9,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 
 ID2D1Bitmap* asteroid_bitmap = NULL;
 ID2D1Bitmap* planet_saturn_pink_bitmap = NULL;
+ID2D1Bitmap* clouds_bitmap = NULL;
 IWICImagingFactory* pWICFactory = NULL;
 
 class Rocket 
@@ -183,6 +184,38 @@ public:
     }
 };
 
+
+class Clouds
+{
+public:
+    ID2D1Bitmap* bitmap;
+    D2D1_POINT_2F center;
+    float left_end;
+    float right_end;
+    float top_end;
+    float bottom_end;
+    int size_x;
+    int size_y;
+
+    Clouds(ID2D1Bitmap* bitmap) : bitmap(bitmap) {};
+
+    void set_bitmap(ID2D1Bitmap* bitmap)
+    {
+        this->bitmap = bitmap;
+    }
+
+    void set_center(D2D1_POINT_2F center, int size_x, int size_y)
+    {
+        this->center = center;
+        this->left_end = center.x - size_x;
+        this->right_end = center.x + size_x;
+        this->top_end = center.y - size_y;
+        this->bottom_end = center.y + size_y;
+        this->size_x = size_x;
+        this->size_y - size_y;
+    }
+};
+
 Rocket rocket;
 
 int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PWSTR pCmdLine, int nCmdShow)
@@ -236,6 +269,7 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PWSTR pCmdLine
 
 Asteroid asteroid(asteroid_bitmap, { 500, 500 }, 100);
 Planet planet_saturn_pink(planet_saturn_pink_bitmap);
+Clouds clouds(clouds_bitmap);
 
 
 bool IsPointCloseToPoint(D2D1_POINT_2F a, D2D1_POINT_2F b, float d)
@@ -270,7 +304,49 @@ bool DidRocketHitRock(Rocket rocket, Asteroid astr) {
         return true;
 }
 
+ID2D1Bitmap* load_bitmap(HWND hwnd, HRESULT hr, const LPCWSTR name, ID2D1Bitmap* lbitmap, IWICImagingFactory* pWICFactory)
+{
+    // Load bitmap from file
+    IWICBitmapDecoder* pDecoder = NULL;
+    hr = pWICFactory->CreateDecoderFromFilename(name, NULL, GENERIC_READ, WICDecodeMetadataCacheOnLoad, &pDecoder);
+    if (FAILED(hr))
+    {
+        MessageBox(hwnd, L"Error loading bitmap from file.", L"Error", MB_ICONERROR);
+        //return -1;
+    }
+    IWICBitmapFrameDecode* pFrame = NULL;
 
+    hr = pDecoder->GetFrame(0, &pFrame);
+    if (FAILED(hr))
+    {
+        MessageBox(hwnd, L"Error getting frame from bitmap decoder.", L"Error", MB_ICONERROR);
+        //return -1;
+    }
+    IWICFormatConverter* pConverter = NULL;
+    hr = pWICFactory->CreateFormatConverter(&pConverter);
+    if (FAILED(hr))
+    {
+        MessageBox(hwnd, L"Error creating format converter.", L"Error", MB_ICONERROR);
+        //return -1;
+    }
+    hr = pConverter->Initialize(pFrame, GUID_WICPixelFormat32bppPBGRA, WICBitmapDitherTypeNone, NULL, 0.0, WICBitmapPaletteTypeCustom);
+    if (FAILED(hr))
+    {
+        MessageBox(hwnd, L"Error initializing format converter.", L"Error", MB_ICONERROR);
+        //return -1;
+    }
+
+    hr = d2d_render_target->CreateBitmapFromWicBitmap(pConverter, NULL, &lbitmap);
+    if (FAILED(hr))
+    {
+        MessageBox(hwnd, L"Error creating Direct2D bitmap from WIC bitmap.", L"Error", MB_ICONERROR);
+        //return -1;
+    }
+
+    d2d_render_target->SetDpi(96.0f, 96.0f);
+
+    return lbitmap;
+}
 
 LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
@@ -338,6 +414,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
             return -1;
         }
 
+        /*
         // Load bitmap from file
         IWICBitmapDecoder* pDecoder = NULL;
         hr = pWICFactory->CreateDecoderFromFilename(L"asteroida.png", NULL, GENERIC_READ, WICDecodeMetadataCacheOnLoad, &pDecoder);
@@ -375,8 +452,17 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
         }
 
         d2d_render_target->SetDpi(96.0f, 96.0f);
+        */
+        //ID2D1Bitmap* chbitmap = asteroid.bitmap;
+        LPCWSTR name = L"asteroida.png";
+        asteroid.bitmap = load_bitmap(hwnd, hr, name, asteroid.bitmap, pWICFactory);
+        
+        
+        name = L"saturn_pink_3.png";
+        planet_saturn_pink.bitmap = load_bitmap(hwnd, hr, name, planet_saturn_pink.bitmap, pWICFactory);
 
-
+        name = L"clouds1.png";
+        clouds.bitmap = load_bitmap(hwnd, hr, name, clouds.bitmap, pWICFactory);
 
         return 0;
     }
@@ -773,8 +859,6 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 
         
 
-        
-
         rocket.set_attributes(120, 135, 47, 20, 60, 90, 90, 20, body_r_end_x + 50, body_r_end_x + 20, 35, body_l_end_x, body_l_end_x + 15,
             body_ends_y, bot_l_end_x + 50, bot_l_end_x + 55, bot_l_end_x + 45, bot_l_end_x + 30, bot_l_end_x + 25, bot_ends_y - 10,
             bot_ends_y - 10, rocket.center.x + 40, 40, 12, 90, 95, 160, 100, 120, 90, 145, 125, 90, eng_ul_end_y - 10, 115, 95);
@@ -883,6 +967,8 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
         ID2D1SolidColorBrush* brush_navy;
         d2d_render_target->CreateSolidColorBrush(navy, &brush_navy);
 
+        planet_saturn_pink.set_center({ (float)rc.right - 200, (float)rc.top + 200 }, 125);
+        clouds.set_center({ (float)rc.right - 400, (float)rc.top + 200 }, 335, 200);
 
         // Rysowanie
         d2d_render_target->BeginDraw();
@@ -900,9 +986,13 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
             exit(1);
 
 
-
-        d2d_render_target->DrawBitmap(asteroid.bitmap, D2D1::RectF(asteroid.left_end, asteroid.top_end, 
+        
+        d2d_render_target->DrawBitmap(planet_saturn_pink.bitmap, D2D1::RectF(planet_saturn_pink.left_end, planet_saturn_pink.top_end,
+            planet_saturn_pink.right_end, planet_saturn_pink.bottom_end));
+        d2d_render_target->DrawBitmap(asteroid.bitmap, D2D1::RectF(asteroid.left_end, asteroid.top_end,
             asteroid.right_end, asteroid.bottom_end));
+        d2d_render_target->DrawBitmap(clouds.bitmap, D2D1::RectF(clouds.left_end, clouds.top_end,
+            clouds.right_end, clouds.bottom_end));
 
         d2d_render_target->DrawGeometry(path_rocket_top, brush, brush_rocket_width);
         d2d_render_target->FillGeometry(path_rocket_top, top_rocket_lin_grad_brush);
@@ -1008,11 +1098,11 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
             &bitmap);
         
         // Rysowanie bitmapy
-        d2d_render_target->DrawBitmap(
+        /*d2d_render_target->DrawBitmap(
             bitmap,
             RectF(1000, 200, 1300, 500),
             1.0f,
-            D2D1_BITMAP_INTERPOLATION_MODE_NEAREST_NEIGHBOR);
+            D2D1_BITMAP_INTERPOLATION_MODE_NEAREST_NEIGHBOR);*/
         //D2D1_BITMAP_INTERPOLATION_MODE_LINEAR);
         
 

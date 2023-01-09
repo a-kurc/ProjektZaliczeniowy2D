@@ -28,8 +28,5 @@
     <Image Include="..\..\..\Documents\asteroida.png">
       <Filter>Pliki źródłowe</Filter>
     </Image>
-    <Image Include="..\..\..\Documents\planeta_saturn_pink.png">
-      <Filter>Pliki źródłowe</Filter>
-    </Image>
   </ItemGroup>
 </Project>
