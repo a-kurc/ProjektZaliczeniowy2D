@@ -20,10 +20,12 @@
 #include <iostream>
 #include <ctime>
 #include <d2d1_1.h>
+#include <dwrite_3.h>	// i do³¹czyæ dwrite.lib do projektu
+#include <dwrite.h>
 #pragma comment(lib, "windowscodecs.lib")
 #pragma comment(lib, "d2d1")
 #pragma comment(lib, "windowscodecs")
-
+#pragma comment(lib, "Dwrite")
 #pragma comment(lib, "d2d1")
 
 using D2D1::RenderTargetProperties;

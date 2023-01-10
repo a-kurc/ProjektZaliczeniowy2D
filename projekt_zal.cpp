@@ -1,4 +1,4 @@
-#ifndef UNICODE
+ï»¿#ifndef UNICODE
 #define UNICODE
 #endif 
 
@@ -7,12 +7,17 @@ using namespace globals;
 
 LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 
-ID2D1Bitmap* asteroid_bitmap = NULL;
-ID2D1Bitmap* planet_saturn_pink_bitmap = NULL;
-ID2D1Bitmap* clouds_bitmap = NULL;
+//ID2D1Bitmap* asteroid_bitmap = NULL;
+//ID2D1Bitmap* planet_saturn_pink_bitmap = NULL;
+//ID2D1Bitmap* clouds_bitmap = NULL;
+//ID2D1Bitmap* stars1 = NULL;
+//ID2D1Bitmap* stars2 = NULL;
 IWICImagingFactory* pWICFactory = NULL;
+IDWriteFactory* write_factory = nullptr;
+IDWriteTextFormat* text_format = nullptr;
+WCHAR const NAPIS[] = L"CzeÅ›Ä‡ Åšwiecie";
 
-class Rocket 
+class Rocket
 {
 public:
     D2D1_POINT_2F center = { .x = 0, .y = 0 };
@@ -70,12 +75,12 @@ public:
         center.y += 5;
     }
 
-    void set_attributes(int body_l_end_x, int body_r_end_x, int body_ends_y, int body_l_point_x, int body_r_point_x, int body_l_point_y, 
-    int body_r_point_y, int body_rounding_x, int top_end_x, int top_rounding_x, int top_rounding_y, int bot_r_end_x, 
-    int bot_l_end_x, int bot_ends_y, int fire_end_u_x, int fire_end_m_x, int fire_end_d_x, int fire_um_x, int fire_md_x, 
-    int fire_um_y, int fire_md_y, int centr_windw_x, int window_r, int eng_start_x, int eng_ur_point_x, int eng_ul_point_x, 
-    int eng_l_end_x, int eng_dl_point_x, int eng_dr_point_x, int eng_mid_point_x, int eng_ur_point_y, int eng_ul_point_y, 
-    int eng_ul_end_y, int eng_dl_end_y, int eng_dr_point_y, int eng_dl_point_y)
+    void set_attributes(int body_l_end_x, int body_r_end_x, int body_ends_y, int body_l_point_x, int body_r_point_x, int body_l_point_y,
+        int body_r_point_y, int body_rounding_x, int top_end_x, int top_rounding_x, int top_rounding_y, int bot_r_end_x,
+        int bot_l_end_x, int bot_ends_y, int fire_end_u_x, int fire_end_m_x, int fire_end_d_x, int fire_um_x, int fire_md_x,
+        int fire_um_y, int fire_md_y, int centr_windw_x, int window_r, int eng_start_x, int eng_ur_point_x, int eng_ul_point_x,
+        int eng_l_end_x, int eng_dl_point_x, int eng_dr_point_x, int eng_mid_point_x, int eng_ur_point_y, int eng_ul_point_y,
+        int eng_ul_end_y, int eng_dl_end_y, int eng_dr_point_y, int eng_dl_point_y)
     {
         this->body_l_end_x = body_l_end_x;
         this->body_r_end_x = body_r_end_x;
@@ -128,7 +133,7 @@ public:
     int size;
     int speed;
 
-    Asteroid(ID2D1Bitmap* bitmap, D2D1_POINT_2F center, int size) 
+    Asteroid(ID2D1Bitmap* bitmap, D2D1_POINT_2F center, int size)
     {
         this->bitmap = bitmap;
         this->center = center;
@@ -139,7 +144,7 @@ public:
         this->bottom_end = center.y + size;
     }
 
-    void set_center(D2D1_POINT_2F center, int size) 
+    void set_center(D2D1_POINT_2F center, int size)
     {
         this->center = center;
         this->left_end = center.x - size;
@@ -235,6 +240,22 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PWSTR pCmdLine
 
     RegisterClass(&wc);
 
+    HRESULT hr = DWriteCreateFactory(
+        DWRITE_FACTORY_TYPE_SHARED,
+        __uuidof(IDWriteFactory),
+        reinterpret_cast<IUnknown**>(&write_factory)
+    );
+    write_factory->CreateTextFormat(
+        L"Times New Roman",
+        nullptr,
+        DWRITE_FONT_WEIGHT_BOLD,
+        DWRITE_FONT_STYLE_NORMAL,
+        DWRITE_FONT_STRETCH_NORMAL,
+        150.0f,
+        L"en-us",
+        &text_format
+    );
+
     // Create the window.
     HWND hwnd = CreateWindowEx(
         0,                              // Optional window styles.
@@ -264,13 +285,20 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PWSTR pCmdLine
         DispatchMessage(&msg);
     }
 
+ 
+    
+
+
+
     return 0;
 }
 
-Asteroid asteroid(asteroid_bitmap, { 500, 500 }, 100);
-Planet planet_saturn_pink(planet_saturn_pink_bitmap);
-Clouds clouds(clouds_bitmap);
-
+Asteroid asteroid(NULL, { 500, 500 }, 100);
+Planet planet_saturn_pink(NULL);
+Clouds clouds(NULL);
+Clouds stars1(NULL);
+Clouds stars2(NULL);
+Clouds stars_bck(NULL);
 
 bool IsPointCloseToPoint(D2D1_POINT_2F a, D2D1_POINT_2F b, float d)
 {
@@ -279,28 +307,28 @@ bool IsPointCloseToPoint(D2D1_POINT_2F a, D2D1_POINT_2F b, float d)
     float dy = a.y - b.y;
     float distance = sqrt(dx * dx + dy * dy);
 
-    
+
     // Check if the distance is smaller than d.
     return distance < d;
 }
 
 bool DidRocketHitRock(Rocket rocket, Asteroid astr) {
 
-    if (IsPointCloseToPoint(astr.center, {(float)rocket.top_end_x + rocket.center.x, 
-            (float)rocket.center.y}, astr.size)
-        || IsPointCloseToPoint(astr.center, {(float) rocket.body_r_end_x + rocket.center.x, 
-            (float)rocket.center.y+(float) rocket.body_ends_y}, astr.size)
-        || IsPointCloseToPoint(astr.center, {(float)rocket.body_r_end_x + rocket.center.x, 
-            (float)rocket.center.y-(float)rocket.body_ends_y }, astr.size)
-        || IsPointCloseToPoint(astr.center, {(float)rocket.center.x + rocket.body_r_point_x,
-            (float)rocket.center.y-(float)rocket.body_r_point_y }, astr.size - 18)
-        || IsPointCloseToPoint(astr.center, {(float)rocket.center.x + rocket.body_r_point_x,
-            (float)rocket.center.y+(float)rocket.body_r_point_y }, astr.size - 18)
-        || IsPointCloseToPoint(astr.center, {(float)rocket.center.x - rocket.eng_ur_point_x,
+    if (IsPointCloseToPoint(astr.center, { (float)rocket.top_end_x + rocket.center.x,
+            (float)rocket.center.y }, astr.size)
+        || IsPointCloseToPoint(astr.center, { (float)rocket.body_r_end_x + rocket.center.x,
+            (float)rocket.center.y + (float)rocket.body_ends_y }, astr.size)
+        || IsPointCloseToPoint(astr.center, { (float)rocket.body_r_end_x + rocket.center.x,
+            (float)rocket.center.y - (float)rocket.body_ends_y }, astr.size)
+        || IsPointCloseToPoint(astr.center, { (float)rocket.center.x + rocket.body_r_point_x,
+            (float)rocket.center.y - (float)rocket.body_r_point_y }, astr.size - 18)
+        || IsPointCloseToPoint(astr.center, { (float)rocket.center.x + rocket.body_r_point_x,
+            (float)rocket.center.y + (float)rocket.body_r_point_y }, astr.size - 18)
+        || IsPointCloseToPoint(astr.center, { (float)rocket.center.x - rocket.eng_ur_point_x,
             (float)rocket.center.y + (float)rocket.eng_ur_point_y }, astr.size - 26)
-        || IsPointCloseToPoint(astr.center, {(float)rocket.center.x - rocket.eng_ur_point_x,
+        || IsPointCloseToPoint(astr.center, { (float)rocket.center.x - rocket.eng_ur_point_x,
             (float)rocket.center.y - (float)rocket.eng_ur_point_y }, astr.size - 26)
-)
+        )
         return true;
 }
 
@@ -386,7 +414,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
         ellipse_center_pupil1.y = ellipse_center_eye1.y - half_y;
         ellipse_center_pupil2.x = ellipse_center_eye2.x - half_x;
         ellipse_center_pupil2.y = ellipse_center_eye2.y - half_y;
-        
+
         int size = 100;
         srand(time(NULL));
         int offset = rc.top + size;
@@ -456,13 +484,25 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
         //ID2D1Bitmap* chbitmap = asteroid.bitmap;
         LPCWSTR name = L"asteroida.png";
         asteroid.bitmap = load_bitmap(hwnd, hr, name, asteroid.bitmap, pWICFactory);
-        
-        
+
+
         name = L"saturn_pink_3.png";
         planet_saturn_pink.bitmap = load_bitmap(hwnd, hr, name, planet_saturn_pink.bitmap, pWICFactory);
 
         name = L"clouds1.png";
         clouds.bitmap = load_bitmap(hwnd, hr, name, clouds.bitmap, pWICFactory);
+
+        name = L"my_stars6.png";
+        stars1.bitmap = load_bitmap(hwnd, hr, name, stars1.bitmap, pWICFactory);
+
+        name = L"my_galaxy2.png";
+        stars2.bitmap = load_bitmap(hwnd, hr, name, stars2.bitmap, pWICFactory);
+
+        name = L"my_stars_background.png";
+        stars_bck.bitmap = load_bitmap(hwnd, hr, name, stars2.bitmap, pWICFactory);
+
+       
+
 
         return 0;
     }
@@ -493,31 +533,31 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
         }
         else
         {
-            // lewe oko d³ugoœæ du¿ego trójk¹ta w poziomie 
+            // lewe oko dï¿½ugoï¿½ï¿½ duï¿½ego trï¿½jkï¿½ta w poziomie 
             float llen_big_tr_in_x = abs(LOWORD(lParam) - ellipse_center_eye1.x);
-            // lewe oko d³ugoœæ du¿ego trójk¹ta w pionie 
+            // lewe oko dï¿½ugoï¿½ï¿½ duï¿½ego trï¿½jkï¿½ta w pionie 
             float llen_big_tr_in_y = abs(HIWORD(lParam) - ellipse_center_eye1.y);
-            // preciwprostok¹tna du¿ego trójk¹ta
+            // preciwprostokï¿½tna duï¿½ego trï¿½jkï¿½ta
             float llen_big_tr_across = sqrt(pow(llen_big_tr_in_x, 2) + pow(llen_big_tr_in_y, 2));
-            // lewe oko d³ugoœæ ma³ego trójk¹ta w poziomie 
+            // lewe oko dï¿½ugoï¿½ï¿½ maï¿½ego trï¿½jkï¿½ta w poziomie 
             float llen_small_tr_in_x = (llen_big_tr_in_x * radius_of_middleeye) / llen_big_tr_across;
-            // lewe oko d³ugoœæ ma³ego trójk¹ta w pionie 
+            // lewe oko dï¿½ugoï¿½ï¿½ maï¿½ego trï¿½jkï¿½ta w pionie 
             float llen_small_tr_in_y = (llen_big_tr_in_y * radius_of_middleeye) / llen_big_tr_across;
 
-            // jeœli x punktu kursora jest na prawo od œrodka oka
+            // jeï¿½li x punktu kursora jest na prawo od ï¿½rodka oka
             if (LOWORD(lParam) > ellipse_center_eye1.x)
-                //œrodek ¿renicy idzie o llen_small_tr_in_x w prawo
+                //ï¿½rodek ï¿½renicy idzie o llen_small_tr_in_x w prawo
                 ellipse_center_pupil1.x = ellipse_center_eye1.x + llen_small_tr_in_x;
             else
-                //œrodek ¿renicy idzie o llen_small_tr_in_x w lewo
+                //ï¿½rodek ï¿½renicy idzie o llen_small_tr_in_x w lewo
                 ellipse_center_pupil1.x = ellipse_center_eye1.x - llen_small_tr_in_x;
 
-            // jeœli y punktu kursora jest wy¿ej od œrodka oka
+            // jeï¿½li y punktu kursora jest wyï¿½ej od ï¿½rodka oka
             if (HIWORD(lParam) < ellipse_center_eye1.y)
-                //œrodek ¿renicy idzie o llen_small_tr_in_y w górê
+                //ï¿½rodek ï¿½renicy idzie o llen_small_tr_in_y w gï¿½rï¿½
                 ellipse_center_pupil1.y = ellipse_center_eye1.y - llen_small_tr_in_y;
             else
-                //œrodek ¿renicy idzie o llen_small_tr_in_y w dó³
+                //ï¿½rodek ï¿½renicy idzie o llen_small_tr_in_y w dï¿½
                 ellipse_center_pupil1.y = ellipse_center_eye1.y + llen_small_tr_in_y;
         }
         if (radius_of_middleeye_squared >= pow((LOWORD(lParam) - ellipse_center_eye2.x), 2)
@@ -528,31 +568,31 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
         }
         else
         {
-            // prawe oko d³ugoœæ du¿ego trójk¹ta w poziomie 
+            // prawe oko dï¿½ugoï¿½ï¿½ duï¿½ego trï¿½jkï¿½ta w poziomie 
             float llen_big_tr_in_x = abs(LOWORD(lParam) - ellipse_center_eye2.x);
-            // prawe oko d³ugoœæ du¿ego trójk¹ta w pionie 
+            // prawe oko dï¿½ugoï¿½ï¿½ duï¿½ego trï¿½jkï¿½ta w pionie 
             float llen_big_tr_in_y = abs(HIWORD(lParam) - ellipse_center_eye2.y);
-            // preciwprostok¹tna du¿ego trójk¹ta
+            // preciwprostokï¿½tna duï¿½ego trï¿½jkï¿½ta
             float llen_big_tr_across = sqrt(pow(llen_big_tr_in_x, 2) + pow(llen_big_tr_in_y, 2));
-            // prawe oko d³ugoœæ ma³ego trójk¹ta w poziomie 
+            // prawe oko dï¿½ugoï¿½ï¿½ maï¿½ego trï¿½jkï¿½ta w poziomie 
             float llen_small_tr_in_x = (llen_big_tr_in_x * radius_of_middleeye) / llen_big_tr_across;
-            // prawe oko d³ugoœæ ma³ego trójk¹ta w pionie 
+            // prawe oko dï¿½ugoï¿½ï¿½ maï¿½ego trï¿½jkï¿½ta w pionie 
             float llen_small_tr_in_y = (llen_big_tr_in_y * radius_of_middleeye) / llen_big_tr_across;
 
-            // jeœli x punktu kursora jest na prawo od œrodka oka
+            // jeï¿½li x punktu kursora jest na prawo od ï¿½rodka oka
             if (LOWORD(lParam) > ellipse_center_eye2.x)
-                //œrodek ¿renicy idzie o llen_small_tr_in_x w prawo
+                //ï¿½rodek ï¿½renicy idzie o llen_small_tr_in_x w prawo
                 ellipse_center_pupil2.x = ellipse_center_eye2.x + llen_small_tr_in_x;
             else
-                //œrodek ¿renicy idzie o llen_small_tr_in_x w lewo
+                //ï¿½rodek ï¿½renicy idzie o llen_small_tr_in_x w lewo
                 ellipse_center_pupil2.x = ellipse_center_eye2.x - llen_small_tr_in_x;
 
-            // jeœli y punktu kursora jest wy¿ej od œrodka oka
+            // jeï¿½li y punktu kursora jest wyï¿½ej od ï¿½rodka oka
             if (HIWORD(lParam) < ellipse_center_eye2.y)
-                //œrodek ¿renicy idzie o llen_small_tr_in_y w górê
+                //ï¿½rodek ï¿½renicy idzie o llen_small_tr_in_y w gï¿½rï¿½
                 ellipse_center_pupil2.y = ellipse_center_eye2.y - llen_small_tr_in_y;
             else
-                //œrodek ¿renicy idzie o llen_small_tr_in_y w dó³
+                //ï¿½rodek ï¿½renicy idzie o llen_small_tr_in_y w dï¿½
                 ellipse_center_pupil2.y = ellipse_center_eye2.y + llen_small_tr_in_y;
         }
         ellipse_center_pupil1.x -= half_x;
@@ -610,7 +650,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
         if (GetAsyncKeyState(VK_DOWN) < 0)
             rocket.move_down();
 
-        
+
         if (asteroid.right_end < rc.left) {
             //srand(time(NULL));
             /*float percentage_of_rocket_in_window = ((eng_ur_point_y * 2) / (rc.bottom - rc.top)) * 100;
@@ -627,10 +667,10 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
             int random_speed = 5 + (rand() % 3);
             asteroid.set_speed(random_speed);
         }
-        
+
         asteroid.set_center({ asteroid.center.x -= asteroid.speed, asteroid.center.y }, asteroid.size);
 
-        
+
 
         Matrix3x2F scale = Matrix3x2F::Scale((initial_width) / (rc.right - rc.left),
             ((initial_higth) / (rc.bottom - rc.top)), Point2F(0, 0));
@@ -652,7 +692,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
         ID2D1SolidColorBrush* brush_blue = nullptr;
         ID2D1SolidColorBrush* brush_yellow = nullptr;
 
-        // - Interfejsy do obs³ugi œcie¿ki
+        // - Interfejsy do obsï¿½ugi ï¿½cieï¿½ki
         ID2D1PathGeometry* path = nullptr;
         ID2D1GeometrySink* path_sink = nullptr;
         ID2D1PathGeometry* path_nose = nullptr;
@@ -669,7 +709,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
         ID2D1GeometrySink* engines_rocket_path_sink = nullptr;
 
 
-        // Sta³e z kolorami
+        // Staï¿½e z kolorami
         D2D1_COLOR_F const brush_color_white =
         { .r = 1.0f, .g = 1.0f, .b = 1.0f, .a = 1.0f };
         D2D1_COLOR_F const brush_color_black =
@@ -677,13 +717,13 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
         // Kolory dla nosa
         D2D1_COLOR_F const brush1_color =
         { .r = 0.2f, .g = 0.2f, .b = 0.2f, .a = 1.0f };
-        
+
         //Kolory dla rakiety
         D2D1_COLOR_F const brush_color_red = { .r = 1, .g = 0, .b = 0, .a = 1 };
         D2D1_COLOR_F const brush_color_blue = { .r = 0, .g = 0.6, .b = 1, .a = 1 };
         D2D1_COLOR_F const brush_color_yellow = { .r = 1, .g = 1, .b = 0, .a = 1 };
 
-        // Utworzenie pêdzli
+        // Utworzenie pï¿½dzli
         d2d_render_target->CreateSolidColorBrush(brush_color_black, &brush);
         d2d_render_target->CreateSolidColorBrush(brush1_color, &brush1);
         d2d_render_target->CreateSolidColorBrush(brush_color_red, &brush_red);
@@ -691,7 +731,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
         d2d_render_target->CreateSolidColorBrush(brush_color_blue, &brush_blue);
         d2d_render_target->CreateSolidColorBrush(brush_color_yellow, &brush_yellow);
 
-        // Utworzenie i zbudowanie geometrii œcie¿ki (cia³a)
+        // Utworzenie i zbudowanie geometrii ï¿½cieï¿½ki (ciaï¿½a)
         d2d_factory->CreatePathGeometry(&path);
         path->Open(&path_sink);
 
@@ -736,12 +776,12 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
         path_sink_mouth->Close();
 
 
-        //Pêdzel gradient (linear) do cia³a rakiety
+        //Pï¿½dzel gradient (linear) do ciaï¿½a rakiety
         ID2D1LinearGradientBrush* rocket_lin_grad_brush = nullptr;
         ID2D1LinearGradientBrush* top_rocket_lin_grad_brush = nullptr;
         ID2D1LinearGradientBrush* window_rocket_lin_grad_brush = nullptr;
 
-        // - Pêdzel - gradient promienisty
+        // - Pï¿½dzel - gradient promienisty
         ID2D1RadialGradientBrush* rad_brush_eye1 = nullptr;
         ID2D1RadialGradientBrush* rad_brush_eye2 = nullptr;
         ID2D1RadialGradientBrush* rad_brush_body = nullptr;
@@ -753,7 +793,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
         D2D1_GRADIENT_STOP rad_stops_data_eye[NUM_RAD_STOPS_EYE];
         D2D1_GRADIENT_STOP rad_stops_data_body[NUM_RAD_STOPS_BODY];
 
-        // Sta³e ustawienia geometrii
+        // Staï¿½e ustawienia geometrii
         D2D1_POINT_2F const center_body = { .x = half_x, .y = half_y };
         D2D1_POINT_2F const eye_ellipse_radii = { .x = r_eye, .y = r_eye };
         D2D1_POINT_2F const pupil_ellipse_radii = { .x = r_pupil, .y = r_pupil };
@@ -795,7 +835,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
             D2D1_EXTEND_MODE_CLAMP,
             &rockt_lin_grad_stops
         );
-        
+
         //Kolory do gradientu linearnego dla topu rakiety
         ID2D1GradientStopCollection* top_rockt_lin_grad_stops = NULL;
         D2D1_GRADIENT_STOP top_rockt_grad_stops_arr[2];
@@ -857,12 +897,12 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
                 rad_stops_body, &rad_brush_body);
         }
 
-        
+
 
         rocket.set_attributes(120, 135, 47, 20, 60, 90, 90, 20, body_r_end_x + 50, body_r_end_x + 20, 35, body_l_end_x, body_l_end_x + 15,
             body_ends_y, bot_l_end_x + 50, bot_l_end_x + 55, bot_l_end_x + 45, bot_l_end_x + 30, bot_l_end_x + 25, bot_ends_y - 10,
             bot_ends_y - 10, rocket.center.x + 40, 40, 12, 90, 95, 160, 100, 120, 90, 145, 125, 90, eng_ul_end_y - 10, 115, 95);
-       
+
 
         d2d_factory->CreatePathGeometry(&path_rocket_body);
         path_rocket_body->Open(&path_sink_rocket_body);
@@ -876,7 +916,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
         path_sink_rocket_body->AddQuadraticBezier(QuadraticBezierSegment(
             Point2F(rocket.center.x - body_l_end_x - body_rounding_x, rocket.center.y), Point2F(rocket.center.x - body_l_end_x, rocket.center.y - body_ends_y)));
         path_sink_rocket_body->EndFigure(D2D1_FIGURE_END_OPEN);
-        path_sink_rocket_body->Close(); 
+        path_sink_rocket_body->Close();
 
         d2d_factory->CreatePathGeometry(&path_rocket_top);
         path_rocket_top->Open(&path_sink_rocket_top);
@@ -917,7 +957,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 
         //ComPtr<ID2D1StrokeStyle> stroke = CreateStrokeStyle();
         const D2D1_ELLIPSE ell = Ellipse(Point2F(centr_windw_x, rocket.center.y), window_r, window_r);
-        
+
 
         d2d_factory->CreatePathGeometry(&engines_rocket_path);
         engines_rocket_path->Open(&engines_rocket_path_sink);
@@ -927,11 +967,11 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
         engines_rocket_path_sink->AddLine(Point2F(rocket.center.x - eng_l_end_x, rocket.center.y - eng_dl_end_y));
         engines_rocket_path_sink->AddBezier(BezierSegment(Point2F(rocket.center.x - eng_dl_point_x, rocket.center.y - eng_dl_point_y),
             Point2F(rocket.center.x - eng_dr_point_x, rocket.center.y - eng_dr_point_y), Point2F(rocket.center.x - eng_mid_point_x, rocket.center.y)));
-        engines_rocket_path_sink->AddBezier(BezierSegment(Point2F(rocket.center.x - eng_dr_point_x, rocket.center.y + eng_dr_point_y), 
+        engines_rocket_path_sink->AddBezier(BezierSegment(Point2F(rocket.center.x - eng_dr_point_x, rocket.center.y + eng_dr_point_y),
             Point2F(rocket.center.x - eng_dl_point_x, rocket.center.y + eng_dl_point_y), Point2F(rocket.center.x - eng_l_end_x, rocket.center.y + eng_dl_end_y)));
         engines_rocket_path_sink->AddLine(Point2F(rocket.center.x - eng_l_end_x, rocket.center.y + eng_ul_end_y));
         engines_rocket_path_sink->AddBezier(BezierSegment(
-            Point2F(rocket.center.x - eng_ul_point_x, rocket.center.y + eng_ul_point_y), 
+            Point2F(rocket.center.x - eng_ul_point_x, rocket.center.y + eng_ul_point_y),
             Point2F(rocket.center.x - eng_ur_point_x, rocket.center.y + eng_ur_point_y), Point2F(rocket.center.x - eng_start_x, rocket.center.y)));
         engines_rocket_path_sink->EndFigure(D2D1_FIGURE_END_OPEN);
         engines_rocket_path_sink->Close();
@@ -961,7 +1001,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
             window_rockt_lin_grad_stops,
             &window_rocket_lin_grad_brush
         );
-        
+
 
         D2D1_COLOR_F navy = D2D1::ColorF(0.0f, 0.0f, 0.15f, 1.0f);
         ID2D1SolidColorBrush* brush_navy;
@@ -969,6 +1009,9 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 
         planet_saturn_pink.set_center({ (float)rc.right - 200, (float)rc.top + 200 }, 125);
         clouds.set_center({ (float)rc.right - 400, (float)rc.top + 200 }, 335, 200);
+        stars1.set_center({ (float)rc.right - 210, (float)rc.top + 200 }, 335, 200);
+        stars2.set_center({ (float)rc.left + 300, (float)rc.bottom - 100 }, 305, 120);
+        stars_bck.set_center({ half_x, half_y }, half_x + 70 , half_y + 60);
 
         // Rysowanie
         d2d_render_target->BeginDraw();
@@ -985,8 +1028,26 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
         if (DidRocketHitRock(rocket, asteroid))
             exit(1);
 
-
+        d2d_render_target->DrawText(
+            NAPIS,
+            sizeof(NAPIS) / sizeof(NAPIS[0]),
+            text_format,
+            RectF(
+                150.0f, 80.0f,
+                static_cast<FLOAT>(rc.right),
+                static_cast<FLOAT>(rc.bottom)
+            ),
+            brush
+        );
         
+
+        d2d_render_target->DrawBitmap(stars1.bitmap, D2D1::RectF(stars1.left_end, stars1.top_end,
+            stars1.right_end, stars1.bottom_end));
+        d2d_render_target->DrawBitmap(stars2.bitmap, D2D1::RectF(stars2.left_end, stars2.top_end,
+            stars2.right_end, stars2.bottom_end));
+        d2d_render_target->DrawBitmap(stars_bck.bitmap, D2D1::RectF(stars_bck.left_end, stars_bck.top_end,
+            stars_bck.right_end, stars_bck.bottom_end));
+
         d2d_render_target->DrawBitmap(planet_saturn_pink.bitmap, D2D1::RectF(planet_saturn_pink.left_end, planet_saturn_pink.top_end,
             planet_saturn_pink.right_end, planet_saturn_pink.bottom_end));
         d2d_render_target->DrawBitmap(asteroid.bitmap, D2D1::RectF(asteroid.left_end, asteroid.top_end,
@@ -997,13 +1058,13 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
         d2d_render_target->DrawGeometry(path_rocket_top, brush, brush_rocket_width);
         d2d_render_target->FillGeometry(path_rocket_top, top_rocket_lin_grad_brush);
 
-        
+
         d2d_render_target->DrawGeometry(path_rocket_fire, brush, brush_rocket_width);
         d2d_render_target->FillGeometry(path_rocket_fire, brush_yellow);
 
         d2d_render_target->DrawGeometry(path_rocket_bottom, brush, brush_rocket_width);
-        d2d_render_target->FillGeometry(path_rocket_bottom, brush1); 
-        
+        d2d_render_target->FillGeometry(path_rocket_bottom, brush1);
+
         d2d_render_target->DrawGeometry(engines_rocket_path, brush, brush_rocket_width);
         d2d_render_target->FillGeometry(engines_rocket_path, brush_red);
 
@@ -1014,7 +1075,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 
 
 
-        // Cia³o z gradientem
+        // Ciaï¿½o z gradientem
         /*d2d_render_target->FillGeometry(path, rad_brush_body);
         d2d_render_target->DrawGeometry(path, brush, brush_body_width);
 
@@ -1034,7 +1095,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
             Ellipse(ellipse_center_eye2, eye_ellipse_radii.x, eye_ellipse_radii.y),
             brush, brush_eye_width);
 
-        // rednice
+        // ï¿½rednice
         d2d_render_target->FillEllipse(
             Ellipse(ellipse_center_pupil1, pupil_ellipse_radii.x, pupil_ellipse_radii.y),
             brush);
@@ -1055,7 +1116,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
         // Zachowujemy macierz transofmacji
         D2D1_MATRIX_3X2_F transformation_to_save;
         d2d_render_target->GetTransform(&transformation_to_save);
-        // Wprawiamy w ruch render_target (¿eby zrobiæ ruchome nos i usta)
+        // Wprawiamy w ruch render_target (ï¿½eby zrobiï¿½ ruchome nos i usta)
         Matrix3x2F transformation;
         d2d_render_target->GetTransform(&transformation);
         Matrix3x2F rotate = Matrix3x2F::Rotation(angle, Point2F(half_x, half_y + 30));
@@ -1065,11 +1126,11 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
         d2d_render_target->FillGeometry(path_nose, brush1);
         d2d_render_target->DrawGeometry(path_nose, brush, brush_eye_width);
         d2d_render_target->DrawGeometry(path_mouth, brush, brush_mouth_width);
-        // Przywracamy render_target do stanu nieruchomego (¿eby nic poza nosem i ustami siê nie rusza³o)
+        // Przywracamy render_target do stanu nieruchomego (ï¿½eby nic poza nosem i ustami siï¿½ nie ruszaï¿½o)
         d2d_render_target->SetTransform(transformation_to_save);*/
 
 
-        // "Rêcznie" zdefiniowane dane powierzchni bitmapy
+        // "Rï¿½cznie" zdefiniowane dane powierzchni bitmapy
         UINT const bmp_width = 2;
         UINT const bmp_height = 2;
         array<BYTE, 4 * bmp_width * bmp_height> bmp_bits = {    // dane BGRA     
@@ -1077,10 +1138,10 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
           255, 255, 255, 255,     0, 0, 255, 255
         };
         // ...
-        // Interfejs reprezentuj¹cy bitmapê
+        // Interfejs reprezentujï¿½cy bitmapï¿½
         ID2D1Bitmap* bitmap = nullptr;
         // ...
-        // Sta³e kolorów
+        // Staï¿½e kolorï¿½w
         D2D1_COLOR_F const clear_color =
         { .r = 0.75f, .g = 0.5f, .b = 0.25f, .a = 1.0f };
         D2D1_COLOR_F const brush_color =
@@ -1096,15 +1157,15 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
                     D2D1_ALPHA_MODE_PREMULTIPLIED)
             ),
             &bitmap);
-        
+
         // Rysowanie bitmapy
         /*d2d_render_target->DrawBitmap(
             bitmap,
             RectF(1000, 200, 1300, 500),
             1.0f,
             D2D1_BITMAP_INTERPOLATION_MODE_NEAREST_NEIGHBOR);*/
-        //D2D1_BITMAP_INTERPOLATION_MODE_LINEAR);
-        
+            //D2D1_BITMAP_INTERPOLATION_MODE_LINEAR);
+
 
         d2d_render_target->EndDraw();
 
@@ -1143,7 +1204,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
         if (top_rockt_lin_grad_stops) top_rockt_lin_grad_stops->Release();
         if (window_rocket_lin_grad_brush) window_rocket_lin_grad_brush->Release();
         if (window_rockt_grad_stops_arr) window_rockt_lin_grad_stops->Release();
-        
+
     }
     ellipse_center_pupil1.x -= half_x;
     ellipse_center_pupil1.y -= half_y;
