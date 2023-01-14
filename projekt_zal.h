@@ -68,6 +68,14 @@ namespace globals
 	float radius_of_middleeye = r_eye - r_pupil;
 	float initial_width = 0;
 	float initial_higth = 0;
+	IWICImagingFactory* pWICFactory = NULL;
+	IDWriteFactory* write_factory = nullptr;
+	IDWriteTextFormat* text_format = nullptr;
+	int score = 0;
+	bool game_over = false;
+	int t_protrusion = 30;
+	int m_protrusion = 0;
+	int b_protrusion = 50;
 	//float time = 0;
 }
 

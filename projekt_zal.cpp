@@ -7,15 +7,6 @@ using namespace globals;
 
 LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 
-IWICImagingFactory* pWICFactory = NULL;
-IDWriteFactory* write_factory = nullptr;
-IDWriteTextFormat* text_format = nullptr;
-
-int score = 0;
-bool game_over = false;
-int t_protrusion = 30;
-int m_protrusion = 0;
-int b_protrusion = 50;
 
 class Rocket
 {
@@ -266,9 +257,6 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PWSTR pCmdLine
     MSG msg = { };
     while (GetMessage(&msg, NULL, 0, 0) > 0)
     {
-        //if (game_over) {
-
-        //}
         TranslateMessage(&msg);
         DispatchMessage(&msg);
     }
@@ -451,13 +439,6 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
         int bot_r_end_x = body_l_end_x;
         int bot_l_end_x = body_l_end_x + 15;
         int bot_ends_y = body_ends_y;
-        /*int fire_end_u_x = bot_l_end_x + 50;
-        int fire_end_m_x = bot_l_end_x + 55;
-        int fire_end_d_x = bot_l_end_x + 45;
-        int fire_um_x = bot_l_end_x + 30;
-        int fire_md_x = bot_l_end_x + 25;
-        int fire_um_y = bot_ends_y - 10;
-        int fire_md_y = bot_ends_y - 10;*/
         int centr_windw_x = rocket.center.x + 40;
         int window_r = 40;
         int eng_start_x = 12;
@@ -500,6 +481,10 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
         }
 
         asteroid.set_center({ asteroid.center.x -= asteroid.speed, asteroid.center.y }, asteroid.size);
+
+        Matrix3x2F scale = Matrix3x2F::Scale((initial_width) / (rc.right - rc.left),
+            ((initial_higth) / (rc.bottom - rc.top)), Point2F(0, 0));
+        d2d_render_target->SetTransform(scale);
 
         ID2D1SolidColorBrush* brush = nullptr;
         ID2D1SolidColorBrush* brush_dark_grey = nullptr;
