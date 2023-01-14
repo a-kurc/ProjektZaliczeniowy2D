@@ -41,6 +41,24 @@ public:
     int eng_dl_end_y;
     int eng_dr_point_y;
     int eng_dl_point_y;
+    int t_end_line_x;
+    int t_top_end_x;
+    int m_end_line_x;
+    int m_top_end_x;
+    int b_end_line_x;
+    int b_top_end_x;
+    int tt_end_line_y;
+    int t_topt_end_y;
+    int t_topb_end_y;
+    int tb_end_line_y;
+    int mt_end_line_y;
+    int m_topt_end_y;
+    int m_topb_end_y;
+    int mb_end_line_y;
+    int bt_end_line_y;
+    int b_topt_end_y;
+    int b_topb_end_y;
+    int bb_end_line_y;
 
     void set_center(UINT32 x, UINT32 y) {
         center.x = x;
@@ -94,6 +112,31 @@ public:
         this->eng_dl_end_y = eng_dl_end_y;
         this->eng_dr_point_y = eng_dr_point_y;
         this->eng_dl_point_y = eng_dl_point_y;
+    }
+
+    void set_fire(int t_end_line_x, int t_top_end_x, int m_end_line_x, int m_top_end_x, int b_end_line_x, 
+        int b_top_end_x, int tt_end_line_y, int t_topt_end_y, int t_topb_end_y, int tb_end_line_y, 
+        int mt_end_line_y, int m_topt_end_y, int m_topb_end_y, int mb_end_line_y, int bt_end_line_y, 
+        int b_topt_end_y, int b_topb_end_y, int bb_end_line_y) 
+    {
+        this->t_end_line_x = t_end_line_x;
+        this->t_top_end_x = t_top_end_x;
+        this->m_end_line_x = m_end_line_x;
+        this->m_top_end_x = m_top_end_x;
+        this->b_end_line_x = b_end_line_x;
+        this->b_top_end_x = b_top_end_x;
+        this->tt_end_line_y = tt_end_line_y;
+        this->t_topt_end_y = t_topt_end_y;
+        this->t_topb_end_y = t_topb_end_y;
+        this->tb_end_line_y = tb_end_line_y;
+        this->mt_end_line_y = mt_end_line_y;
+        this->m_topt_end_y = m_topt_end_y;
+        this->m_topb_end_y = m_topb_end_y;
+        this->mb_end_line_y = mb_end_line_y;
+        this->bt_end_line_y = bt_end_line_y;
+        this->b_topt_end_y = b_topt_end_y;
+        this->b_topb_end_y = b_topb_end_y;
+        this->bb_end_line_y = bb_end_line_y;
     }
 };
 
@@ -428,32 +471,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
         int body_l_end_x = 120;
         int body_r_end_x = 135;
         int body_ends_y = 47;
-        int body_l_point_x = 20;
-        int body_r_point_x = 60;
-        int body_l_point_y = 90;
-        int body_r_point_y = 90;
-        int body_rounding_x = 20;
-        int top_end_x = body_r_end_x + 50;
-        int top_rounding_x = body_r_end_x + 20;
-        int top_rounding_y = 35;
-        int bot_r_end_x = body_l_end_x;
-        int bot_l_end_x = body_l_end_x + 15;
-        int bot_ends_y = body_ends_y;
-        int centr_windw_x = rocket.center.x + 40;
-        int window_r = 40;
-        int eng_start_x = 12;
-        int eng_ur_point_x = 90;
-        int eng_ul_point_x = 95;
-        int eng_l_end_x = 160;
-        int eng_dl_point_x = 100;
-        int eng_dr_point_x = 120;
-        int eng_mid_point_x = 90;
-        int eng_ur_point_y = 145;
-        int eng_ul_point_y = 125;
         int eng_ul_end_y = 90;
-        int eng_dl_end_y = eng_ul_end_y - 10;
-        int eng_dr_point_y = 115;
-        int eng_dl_point_y = 95;
 
         if (GetAsyncKeyState(VK_RIGHT) < 0)
             rocket.move_right();
@@ -533,7 +551,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
         d2d_render_target->CreateSolidColorBrush(brush_color_orange, &brush_orange);
 
 
-        //P�dzel gradient (linear) do cia�a rakiety
+        //Pędzel gradient (linear) do ciała rakiety
         ID2D1LinearGradientBrush* rocket_lin_grad_brush = nullptr;
         ID2D1LinearGradientBrush* top_rocket_lin_grad_brush = nullptr;
         ID2D1LinearGradientBrush* window_rocket_lin_grad_brush = nullptr;
@@ -596,20 +614,24 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 
 
         rocket.set_attributes(120, 135, 47, 20, 60, 90, 90, 20, body_r_end_x + 50, body_r_end_x + 20, 35, body_l_end_x, body_l_end_x + 15,
-            body_ends_y, /*bot_l_end_x + 50, bot_l_end_x + 55, bot_l_end_x + 45, bot_l_end_x + 30, bot_l_end_x + 25, bot_ends_y - 10,
-            bot_ends_y - 10,*/ rocket.center.x + 40, 40, 12, 90, 95, 160, 100, 120, 90, 145, 125, 90, eng_ul_end_y - 10, 115, 95);
+            body_ends_y, rocket.center.x + 40, 40, 12, 90, 95, 160, 100, 120, 90, 145, 125, 90, eng_ul_end_y - 10, 115, 95);
 
         d2d_factory->CreatePathGeometry(&path_rocket_body);
         path_rocket_body->Open(&path_sink_rocket_body);
         path_sink_rocket_body->BeginFigure(Point2F(rocket.center.x - body_l_end_x, rocket.center.y - body_ends_y), D2D1_FIGURE_BEGIN_FILLED);
-        path_sink_rocket_body->AddBezier(BezierSegment(Point2F(rocket.center.x - body_l_point_x, rocket.center.y - body_l_point_y),
-            Point2F(rocket.center.x + body_r_point_x, rocket.center.y - body_r_point_y), Point2F(rocket.center.x + body_r_end_x, rocket.center.y - body_ends_y)));
+        path_sink_rocket_body->AddBezier(BezierSegment(
+            Point2F(rocket.center.x - rocket.body_l_point_x, rocket.center.y - rocket.body_l_point_y),
+            Point2F(rocket.center.x + rocket.body_r_point_x, rocket.center.y - rocket.body_r_point_y), 
+            Point2F(rocket.center.x + body_r_end_x, rocket.center.y - body_ends_y)));
         path_sink_rocket_body->AddQuadraticBezier(QuadraticBezierSegment(
-            Point2F(rocket.center.x + body_r_end_x - body_rounding_x, rocket.center.y), Point2F(rocket.center.x + body_r_end_x, rocket.center.y + body_ends_y)));
-        path_sink_rocket_body->AddBezier(BezierSegment(Point2F(rocket.center.x + body_r_point_x, rocket.center.y + body_r_point_y),
-            Point2F(rocket.center.x - body_l_point_x, rocket.center.y + body_l_point_y), Point2F(rocket.center.x - body_l_end_x, rocket.center.y + body_ends_y)));
+            Point2F(rocket.center.x + body_r_end_x - rocket.body_rounding_x, rocket.center.y), 
+            Point2F(rocket.center.x + body_r_end_x, rocket.center.y + body_ends_y)));
+        path_sink_rocket_body->AddBezier(BezierSegment(Point2F(rocket.center.x + rocket.body_r_point_x, rocket.center.y + rocket.body_r_point_y),
+            Point2F(rocket.center.x - rocket.body_l_point_x, rocket.center.y + rocket.body_l_point_y), 
+            Point2F(rocket.center.x - body_l_end_x, rocket.center.y + body_ends_y)));
         path_sink_rocket_body->AddQuadraticBezier(QuadraticBezierSegment(
-            Point2F(rocket.center.x - body_l_end_x - body_rounding_x, rocket.center.y), Point2F(rocket.center.x - body_l_end_x, rocket.center.y - body_ends_y)));
+            Point2F(rocket.center.x - body_l_end_x - rocket.body_rounding_x, rocket.center.y), 
+            Point2F(rocket.center.x - body_l_end_x, rocket.center.y - body_ends_y)));
         path_sink_rocket_body->EndFigure(D2D1_FIGURE_END_OPEN);
         path_sink_rocket_body->Close();
 
@@ -617,23 +639,23 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
         path_rocket_top->Open(&path_sink_rocket_top);
         path_sink_rocket_top->BeginFigure(Point2F(rocket.center.x + body_r_end_x, rocket.center.y - body_ends_y), D2D1_FIGURE_BEGIN_FILLED);
         path_sink_rocket_top->AddQuadraticBezier(QuadraticBezierSegment(
-            Point2F(rocket.center.x + top_rounding_x, rocket.center.y - top_rounding_y), Point2F(rocket.center.x + top_end_x, rocket.center.y)));
+            Point2F(rocket.center.x + rocket.top_rounding_x, rocket.center.y - rocket.top_rounding_y), Point2F(rocket.center.x + rocket.top_end_x, rocket.center.y)));
         path_sink_rocket_top->AddQuadraticBezier(QuadraticBezierSegment(
-            Point2F(rocket.center.x + top_rounding_x, rocket.center.y + top_rounding_y), Point2F(rocket.center.x + body_r_end_x, rocket.center.y + body_ends_y)));
+            Point2F(rocket.center.x + rocket.top_rounding_x, rocket.center.y + rocket.top_rounding_y), Point2F(rocket.center.x + body_r_end_x, rocket.center.y + body_ends_y)));
         path_sink_rocket_top->AddQuadraticBezier(QuadraticBezierSegment(
-            Point2F(rocket.center.x + body_rounding_x, rocket.center.y), Point2F(rocket.center.x + body_r_end_x, rocket.center.y - body_ends_y)));
+            Point2F(rocket.center.x + rocket.body_rounding_x, rocket.center.y), Point2F(rocket.center.x + body_r_end_x, rocket.center.y - body_ends_y)));
         path_sink_rocket_top->EndFigure(D2D1_FIGURE_END_OPEN);
         path_sink_rocket_top->Close();
 
         d2d_factory->CreatePathGeometry(&path_rocket_bottom);
         path_rocket_bottom->Open(&path_sink_rocket_bottom);
-        path_sink_rocket_bottom->BeginFigure(Point2F(rocket.center.x - body_l_end_x, rocket.center.y - bot_ends_y), D2D1_FIGURE_BEGIN_FILLED);
+        path_sink_rocket_bottom->BeginFigure(Point2F(rocket.center.x - body_l_end_x, rocket.center.y - rocket.bot_ends_y), D2D1_FIGURE_BEGIN_FILLED);
         path_sink_rocket_bottom->AddQuadraticBezier(QuadraticBezierSegment(
-            Point2F(rocket.center.x - body_l_end_x - body_rounding_x, rocket.center.y), Point2F(rocket.center.x - body_l_end_x, rocket.center.y + bot_ends_y)));
-        path_sink_rocket_bottom->AddLine(Point2F(rocket.center.x - bot_l_end_x, rocket.center.y + bot_ends_y));
+            Point2F(rocket.center.x - body_l_end_x - rocket.body_rounding_x, rocket.center.y), Point2F(rocket.center.x - body_l_end_x, rocket.center.y + rocket.bot_ends_y)));
+        path_sink_rocket_bottom->AddLine(Point2F(rocket.center.x - rocket.bot_l_end_x, rocket.center.y + rocket.bot_ends_y));
         path_sink_rocket_bottom->AddQuadraticBezier(QuadraticBezierSegment(
-            Point2F(rocket.center.x - bot_l_end_x - body_rounding_x, rocket.center.y), Point2F(rocket.center.x - bot_l_end_x, rocket.center.y - bot_ends_y)));
-        path_sink_rocket_bottom->AddLine(Point2F(rocket.center.x - bot_r_end_x, rocket.center.y - bot_ends_y));
+            Point2F(rocket.center.x - rocket.bot_l_end_x - rocket.body_rounding_x, rocket.center.y), Point2F(rocket.center.x - rocket.bot_l_end_x, rocket.center.y - rocket.bot_ends_y)));
+        path_sink_rocket_bottom->AddLine(Point2F(rocket.center.x - rocket.bot_r_end_x, rocket.center.y - rocket.bot_ends_y));
         path_sink_rocket_bottom->EndFigure(D2D1_FIGURE_END_OPEN);
         path_sink_rocket_bottom->Close();
 
@@ -642,76 +664,69 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
         if (m_protrusion < 70) m_protrusion += 2; else m_protrusion = 0;
         if (b_protrusion < 70) b_protrusion += 2; else b_protrusion = 0;
 
-        int t_end_line_x = 150 + t_protrusion;
-        int t_top_end_x = 200 + t_protrusion;
-        int m_end_line_x = 160 + m_protrusion;
-        int m_top_end_x = 210 + m_protrusion;
-        int b_end_line_x = 140 + b_protrusion;
-        int b_top_end_x = 190 + b_protrusion;
-
-        int tt_end_line_y = rocket.body_ends_y;
-        int t_topt_end_y = rocket.body_ends_y - 6;
-        int t_topb_end_y = rocket.body_ends_y - 34;
-        int tb_end_line_y = rocket.body_ends_y - 40;
-
-        int mt_end_line_y = rocket.body_ends_y - 28;
-        int m_topt_end_y = mt_end_line_y - 6; 
-        int m_topb_end_y = mt_end_line_y - 34;
-        int mb_end_line_y = mt_end_line_y - 40;
-        
-        int bt_end_line_y = rocket.body_ends_y - 56;
-        int b_topt_end_y = bt_end_line_y - 6;
-        int b_topb_end_y = bt_end_line_y - 34;
-        int bb_end_line_y = bt_end_line_y - 40;
+        rocket.set_fire(150 + t_protrusion, 200 + t_protrusion, 160 + m_protrusion, 210 + m_protrusion, 140 + b_protrusion, 190 + b_protrusion,
+            rocket.body_ends_y, rocket.body_ends_y - 6, rocket.body_ends_y - 34, rocket.body_ends_y - 40,
+            rocket.body_ends_y - 28, rocket.body_ends_y - 28 - 6, rocket.body_ends_y - 28 - 34, rocket.body_ends_y - 28 - 40,
+            rocket.body_ends_y - 56, rocket.body_ends_y - 56 - 6, rocket.body_ends_y - 56 - 34, rocket.body_ends_y - 56 - 40);
 
         d2d_factory->CreatePathGeometry(&path_fire_t);
         path_fire_t->Open(&path_sink_fire_t);
-        path_sink_fire_t->BeginFigure(Point2F(rocket.center.x - bot_l_end_x, rocket.center.y - bot_ends_y), D2D1_FIGURE_BEGIN_FILLED);
-        path_sink_fire_t->AddLine(Point2F(rocket.center.x - t_end_line_x, rocket.center.y - tt_end_line_y));
-        path_sink_fire_t->AddBezier(BezierSegment(Point2F(rocket.center.x - t_top_end_x, rocket.center.y - t_topt_end_y),
-            Point2F(rocket.center.x - t_top_end_x, rocket.center.y - t_topb_end_y), Point2F(rocket.center.x - t_end_line_x, rocket.center.y - tb_end_line_y)));
-        path_sink_fire_t->AddLine(Point2F(rocket.center.x - bot_l_end_x, rocket.center.y - tb_end_line_y));
+        path_sink_fire_t->BeginFigure(Point2F(rocket.center.x - rocket.bot_l_end_x, rocket.center.y - rocket.bot_ends_y), D2D1_FIGURE_BEGIN_FILLED);
+        path_sink_fire_t->AddLine(Point2F(rocket.center.x - rocket.t_end_line_x, rocket.center.y - rocket.tt_end_line_y));
+        path_sink_fire_t->AddBezier(BezierSegment(Point2F(rocket.center.x - rocket.t_top_end_x, rocket.center.y - rocket.t_topt_end_y),
+            Point2F(rocket.center.x - rocket.t_top_end_x, rocket.center.y - rocket.t_topb_end_y), 
+            Point2F(rocket.center.x - rocket.t_end_line_x, rocket.center.y - rocket.tb_end_line_y)));
+        path_sink_fire_t->AddLine(Point2F(rocket.center.x - rocket.bot_l_end_x, rocket.center.y - rocket.tb_end_line_y));
         path_sink_fire_t->EndFigure(D2D1_FIGURE_END_OPEN);
         path_sink_fire_t->Close();
 
         d2d_factory->CreatePathGeometry(&path_fire_m);
         path_fire_m->Open(&path_sink_fire_m);
-        path_sink_fire_m->BeginFigure(Point2F(rocket.center.x - bot_l_end_x, rocket.center.y - mt_end_line_y), D2D1_FIGURE_BEGIN_FILLED);
-        path_sink_fire_m->AddLine(Point2F(rocket.center.x - m_end_line_x, rocket.center.y - mt_end_line_y));
-        path_sink_fire_m->AddBezier(BezierSegment(Point2F(rocket.center.x - m_top_end_x, rocket.center.y - m_topt_end_y),
-            Point2F(rocket.center.x - m_top_end_x, rocket.center.y - m_topb_end_y), Point2F(rocket.center.x - m_end_line_x, rocket.center.y - mb_end_line_y)));
-        path_sink_fire_m->AddLine(Point2F(rocket.center.x - bot_l_end_x, rocket.center.y - mb_end_line_y));
+        path_sink_fire_m->BeginFigure(Point2F(rocket.center.x - rocket.bot_l_end_x, rocket.center.y - rocket.mt_end_line_y), D2D1_FIGURE_BEGIN_FILLED);
+        path_sink_fire_m->AddLine(Point2F(rocket.center.x - rocket.m_end_line_x, rocket.center.y - rocket.mt_end_line_y));
+        path_sink_fire_m->AddBezier(BezierSegment(Point2F(rocket.center.x - rocket.m_top_end_x, rocket.center.y - rocket.m_topt_end_y),
+            Point2F(rocket.center.x - rocket.m_top_end_x, rocket.center.y - rocket.m_topb_end_y), 
+            Point2F(rocket.center.x - rocket.m_end_line_x, rocket.center.y - rocket.mb_end_line_y)));
+        path_sink_fire_m->AddLine(Point2F(rocket.center.x - rocket.bot_l_end_x, rocket.center.y - rocket.mb_end_line_y));
         path_sink_fire_m->EndFigure(D2D1_FIGURE_END_OPEN);
         path_sink_fire_m->Close();
 
         d2d_factory->CreatePathGeometry(&path_fire_b);
         path_fire_b->Open(&path_sink_fire_b);
-        path_sink_fire_b->BeginFigure(Point2F(rocket.center.x - bot_l_end_x, rocket.center.y - bt_end_line_y), D2D1_FIGURE_BEGIN_FILLED);
-        path_sink_fire_b->AddLine(Point2F(rocket.center.x - b_end_line_x, rocket.center.y - bt_end_line_y));
-        path_sink_fire_b->AddBezier(BezierSegment(Point2F(rocket.center.x - b_top_end_x, rocket.center.y - b_topt_end_y),
-            Point2F(rocket.center.x - b_top_end_x, rocket.center.y - b_topb_end_y), Point2F(rocket.center.x - b_end_line_x, rocket.center.y - bb_end_line_y)));
-        path_sink_fire_b->AddLine(Point2F(rocket.center.x - bot_l_end_x, rocket.center.y - bb_end_line_y));
+        path_sink_fire_b->BeginFigure(Point2F(rocket.center.x - rocket.bot_l_end_x, rocket.center.y - rocket.bt_end_line_y), D2D1_FIGURE_BEGIN_FILLED);
+        path_sink_fire_b->AddLine(Point2F(rocket.center.x - rocket.b_end_line_x, rocket.center.y - rocket.bt_end_line_y));
+        path_sink_fire_b->AddBezier(BezierSegment(Point2F(rocket.center.x - rocket.b_top_end_x, rocket.center.y - rocket.b_topt_end_y),
+            Point2F(rocket.center.x - rocket.b_top_end_x, rocket.center.y - rocket.b_topb_end_y), 
+            Point2F(rocket.center.x - rocket.b_end_line_x, rocket.center.y - rocket.bb_end_line_y)));
+        path_sink_fire_b->AddLine(Point2F(rocket.center.x - rocket.bot_l_end_x, rocket.center.y - rocket.bb_end_line_y));
         path_sink_fire_b->EndFigure(D2D1_FIGURE_END_OPEN);
         path_sink_fire_b->Close();
 
 
-        const D2D1_ELLIPSE ell = Ellipse(Point2F(centr_windw_x, rocket.center.y), window_r, window_r);
+        const D2D1_ELLIPSE ell = Ellipse(Point2F(rocket.centr_windw_x, rocket.center.y), rocket.window_r, rocket.window_r);
 
 
         d2d_factory->CreatePathGeometry(&engines_rocket_path);
         engines_rocket_path->Open(&engines_rocket_path_sink);
-        engines_rocket_path_sink->BeginFigure(Point2F(rocket.center.x - eng_start_x, rocket.center.y), D2D1_FIGURE_BEGIN_FILLED);
-        engines_rocket_path_sink->AddBezier(BezierSegment(Point2F(rocket.center.x - eng_ur_point_x, rocket.center.y - eng_ur_point_y),
-            Point2F(rocket.center.x - eng_ul_point_x, rocket.center.y - eng_ul_point_y), Point2F(rocket.center.x - eng_l_end_x, rocket.center.y - eng_ul_end_y)));
-        engines_rocket_path_sink->AddLine(Point2F(rocket.center.x - eng_l_end_x, rocket.center.y - eng_dl_end_y));
-        engines_rocket_path_sink->AddBezier(BezierSegment(Point2F(rocket.center.x - eng_dl_point_x, rocket.center.y - eng_dl_point_y),
-            Point2F(rocket.center.x - eng_dr_point_x, rocket.center.y - eng_dr_point_y), Point2F(rocket.center.x - eng_mid_point_x, rocket.center.y)));
-        engines_rocket_path_sink->AddBezier(BezierSegment(Point2F(rocket.center.x - eng_dr_point_x, rocket.center.y + eng_dr_point_y),
-            Point2F(rocket.center.x - eng_dl_point_x, rocket.center.y + eng_dl_point_y), Point2F(rocket.center.x - eng_l_end_x, rocket.center.y + eng_dl_end_y)));
-        engines_rocket_path_sink->AddLine(Point2F(rocket.center.x - eng_l_end_x, rocket.center.y + eng_ul_end_y));
+        engines_rocket_path_sink->BeginFigure(Point2F(rocket.center.x - rocket.eng_start_x, rocket.center.y), D2D1_FIGURE_BEGIN_FILLED);
         engines_rocket_path_sink->AddBezier(BezierSegment(
-            Point2F(rocket.center.x - eng_ul_point_x, rocket.center.y + eng_ul_point_y),
-            Point2F(rocket.center.x - eng_ur_point_x, rocket.center.y + eng_ur_point_y), Point2F(rocket.center.x - eng_start_x, rocket.center.y)));
+            Point2F(rocket.center.x - rocket.eng_ur_point_x, rocket.center.y - rocket.eng_ur_point_y),
+            Point2F(rocket.center.x - rocket.eng_ul_point_x, rocket.center.y - rocket.eng_ul_point_y), 
+            Point2F(rocket.center.x - rocket.eng_l_end_x, rocket.center.y - eng_ul_end_y)));
+        engines_rocket_path_sink->AddLine(Point2F(rocket.center.x - rocket.eng_l_end_x, rocket.center.y - rocket.eng_dl_end_y));
+        engines_rocket_path_sink->AddBezier(BezierSegment(
+            Point2F(rocket.center.x - rocket.eng_dl_point_x, rocket.center.y - rocket.eng_dl_point_y),
+            Point2F(rocket.center.x - rocket.eng_dr_point_x, rocket.center.y - rocket.eng_dr_point_y), 
+            Point2F(rocket.center.x - rocket.eng_mid_point_x, rocket.center.y)));
+        engines_rocket_path_sink->AddBezier(BezierSegment(
+            Point2F(rocket.center.x - rocket.eng_dr_point_x, rocket.center.y + rocket.eng_dr_point_y),
+            Point2F(rocket.center.x - rocket.eng_dl_point_x, rocket.center.y + rocket.eng_dl_point_y), 
+            Point2F(rocket.center.x - rocket.eng_l_end_x, rocket.center.y + rocket.eng_dl_end_y)));
+        engines_rocket_path_sink->AddLine(Point2F(rocket.center.x - rocket.eng_l_end_x, rocket.center.y + eng_ul_end_y));
+        engines_rocket_path_sink->AddBezier(BezierSegment(
+            Point2F(rocket.center.x - rocket.eng_ul_point_x, rocket.center.y + rocket.eng_ul_point_y),
+            Point2F(rocket.center.x - rocket.eng_ur_point_x, rocket.center.y + rocket.eng_ur_point_y), 
+            Point2F(rocket.center.x - rocket.eng_start_x, rocket.center.y)));
         engines_rocket_path_sink->EndFigure(D2D1_FIGURE_END_OPEN);
         engines_rocket_path_sink->Close();
 
