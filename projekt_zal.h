@@ -77,6 +77,14 @@ namespace globals
 	int m_protrusion = 0;
 	int b_protrusion = 50;
 	//float time = 0;
+	float brush_body_width = 5.0f;
+	float brush_eye_width = 3.0f;
+	float brush_mouth_width = 9.0f;
+	float brush_rocket_width = 3.5f;
+	int body_l_end_x = 120;
+	int body_r_end_x = 135;
+	int body_ends_y = 47;
+	int eng_ul_end_y = 90;
 }
 
 #endif

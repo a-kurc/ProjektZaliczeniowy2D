@@ -2,245 +2,17 @@
 #define UNICODE
 #endif 
 
-#include "projekt_zal.h"
+#include "Rocket.h"
+#include "Asteroid.h"
+#include "Planet.h"
+#include "CloudsOrStars.h"
+#include "Colors.h"
+#include "Paths.h"
+
 using namespace globals;
 
 LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 
-
-class Rocket
-{
-public:
-    D2D1_POINT_2F center = { .x = 0, .y = 0 };
-    int body_l_end_x;
-    int body_r_end_x;
-    int body_ends_y;
-    int body_l_point_x;
-    int body_r_point_x;
-    int body_l_point_y;
-    int body_r_point_y;
-    int body_rounding_x;
-    int top_end_x;
-    int top_rounding_x;
-    int top_rounding_y;
-    int bot_r_end_x;
-    int bot_l_end_x;
-    int bot_ends_y;
-    int centr_windw_x;
-    int window_r;
-    int eng_start_x;
-    int eng_ur_point_x;
-    int eng_ul_point_x;
-    int eng_l_end_x;
-    int eng_dl_point_x;
-    int eng_dr_point_x;
-    int eng_mid_point_x;
-    int eng_ur_point_y;
-    int eng_ul_point_y;
-    int eng_ul_end_y;
-    int eng_dl_end_y;
-    int eng_dr_point_y;
-    int eng_dl_point_y;
-    int t_end_line_x;
-    int t_top_end_x;
-    int m_end_line_x;
-    int m_top_end_x;
-    int b_end_line_x;
-    int b_top_end_x;
-    int tt_end_line_y;
-    int t_topt_end_y;
-    int t_topb_end_y;
-    int tb_end_line_y;
-    int mt_end_line_y;
-    int m_topt_end_y;
-    int m_topb_end_y;
-    int mb_end_line_y;
-    int bt_end_line_y;
-    int b_topt_end_y;
-    int b_topb_end_y;
-    int bb_end_line_y;
-
-    void set_center(UINT32 x, UINT32 y) {
-        center.x = x;
-        center.y = y;
-    }
-    void move_right() {
-        center.x += 5;
-    }
-    void move_left() {
-        center.x -= 5;
-    }
-    void move_up() {
-        center.y -= 5;
-    }
-    void move_down() {
-        center.y += 5;
-    }
-
-    void set_attributes(int body_l_end_x, int body_r_end_x, int body_ends_y, int body_l_point_x, int body_r_point_x, int body_l_point_y,
-        int body_r_point_y, int body_rounding_x, int top_end_x, int top_rounding_x, int top_rounding_y, int bot_r_end_x,
-        int bot_l_end_x, int bot_ends_y, int centr_windw_x, int window_r, int eng_start_x, int eng_ur_point_x, int eng_ul_point_x,
-        int eng_l_end_x, int eng_dl_point_x, int eng_dr_point_x, int eng_mid_point_x, int eng_ur_point_y, int eng_ul_point_y,
-        int eng_ul_end_y, int eng_dl_end_y, int eng_dr_point_y, int eng_dl_point_y)
-    {
-        this->body_l_end_x = body_l_end_x;
-        this->body_r_end_x = body_r_end_x;
-        this->body_ends_y = body_ends_y;
-        this->body_l_point_x = body_l_point_x;
-        this->body_r_point_x = body_r_point_x;
-        this->body_l_point_y = body_l_point_y;
-        this->body_r_point_y = body_r_point_y;
-        this->body_rounding_x = body_rounding_x;
-        this->top_end_x = top_end_x;
-        this->top_rounding_x = top_rounding_x;
-        this->top_rounding_y = top_rounding_y;
-        this->bot_r_end_x = bot_r_end_x;
-        this->bot_l_end_x = bot_l_end_x;
-        this->bot_ends_y = bot_ends_y;
-        this->centr_windw_x = centr_windw_x;
-        this->window_r = window_r;
-        this->eng_start_x = eng_start_x;
-        this->eng_ur_point_x = eng_ur_point_x;
-        this->eng_ul_point_x = eng_ul_point_x;
-        this->eng_l_end_x = eng_l_end_x;
-        this->eng_dl_point_x = eng_dl_point_x;
-        this->eng_dr_point_x = eng_dr_point_x;
-        this->eng_mid_point_x = eng_mid_point_x;
-        this->eng_ur_point_y = eng_ur_point_y;
-        this->eng_ul_point_y = eng_ul_point_y;
-        this->eng_ul_end_y = eng_ul_end_y;
-        this->eng_dl_end_y = eng_dl_end_y;
-        this->eng_dr_point_y = eng_dr_point_y;
-        this->eng_dl_point_y = eng_dl_point_y;
-    }
-
-    void set_fire(int t_end_line_x, int t_top_end_x, int m_end_line_x, int m_top_end_x, int b_end_line_x, 
-        int b_top_end_x, int tt_end_line_y, int t_topt_end_y, int t_topb_end_y, int tb_end_line_y, 
-        int mt_end_line_y, int m_topt_end_y, int m_topb_end_y, int mb_end_line_y, int bt_end_line_y, 
-        int b_topt_end_y, int b_topb_end_y, int bb_end_line_y) 
-    {
-        this->t_end_line_x = t_end_line_x;
-        this->t_top_end_x = t_top_end_x;
-        this->m_end_line_x = m_end_line_x;
-        this->m_top_end_x = m_top_end_x;
-        this->b_end_line_x = b_end_line_x;
-        this->b_top_end_x = b_top_end_x;
-        this->tt_end_line_y = tt_end_line_y;
-        this->t_topt_end_y = t_topt_end_y;
-        this->t_topb_end_y = t_topb_end_y;
-        this->tb_end_line_y = tb_end_line_y;
-        this->mt_end_line_y = mt_end_line_y;
-        this->m_topt_end_y = m_topt_end_y;
-        this->m_topb_end_y = m_topb_end_y;
-        this->mb_end_line_y = mb_end_line_y;
-        this->bt_end_line_y = bt_end_line_y;
-        this->b_topt_end_y = b_topt_end_y;
-        this->b_topb_end_y = b_topb_end_y;
-        this->bb_end_line_y = bb_end_line_y;
-    }
-};
-
-class Asteroid
-{
-public:
-    ID2D1Bitmap* bitmap;
-    D2D1_POINT_2F center;
-    float left_end;
-    float right_end;
-    float top_end;
-    float bottom_end;
-    int size;
-    int speed;
-
-    Asteroid(ID2D1Bitmap* bitmap, D2D1_POINT_2F center, int size)
-    {
-        this->bitmap = bitmap;
-        this->center = center;
-        this->size = size;
-        this->left_end = center.x - size;
-        this->right_end = center.x + size;
-        this->top_end = center.y - size;
-        this->bottom_end = center.y + size;
-    }
-
-    void set_center(D2D1_POINT_2F center, int size)
-    {
-        this->center = center;
-        this->left_end = center.x - size;
-        this->right_end = center.x + size;
-        this->top_end = center.y - size;
-        this->bottom_end = center.y + size;
-        this->size = size;
-    }
-
-    void set_speed(int speed)
-    {
-        this->speed = speed;
-    }
-};
-
-class Planet
-{
-public:
-    ID2D1Bitmap* bitmap;
-    D2D1_POINT_2F center;
-    float left_end;
-    float right_end;
-    float top_end;
-    float bottom_end;
-    int size;
-
-    Planet(ID2D1Bitmap* bitmap) : bitmap(bitmap) {};
-
-    void set_bitmap(ID2D1Bitmap* bitmap)
-    {
-        this->bitmap = bitmap;
-    }
-
-    void set_center(D2D1_POINT_2F center, int size)
-    {
-        this->center = center;
-        this->left_end = center.x - size;
-        this->right_end = center.x + size;
-        this->top_end = center.y - size;
-        this->bottom_end = center.y + size;
-        this->size = size;
-    }
-};
-
-
-class Clouds
-{
-public:
-    ID2D1Bitmap* bitmap;
-    D2D1_POINT_2F center;
-    float left_end;
-    float right_end;
-    float top_end;
-    float bottom_end;
-    int size_x;
-    int size_y;
-
-    Clouds(ID2D1Bitmap* bitmap) : bitmap(bitmap) {};
-
-    void set_bitmap(ID2D1Bitmap* bitmap)
-    {
-        this->bitmap = bitmap;
-    }
-
-    void set_center(D2D1_POINT_2F center, int size_x, int size_y)
-    {
-        this->center = center;
-        this->left_end = center.x - size_x;
-        this->right_end = center.x + size_x;
-        this->top_end = center.y - size_y;
-        this->bottom_end = center.y + size_y;
-        this->size_x = size_x;
-        this->size_y - size_y;
-    }
-};
-
-Rocket rocket;
 
 int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PWSTR pCmdLine, int nCmdShow)
 {
@@ -304,16 +76,8 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PWSTR pCmdLine
         DispatchMessage(&msg);
     }
 
-
     return 0;
 }
-
-Asteroid asteroid(NULL, { 500, 500 }, 100);
-Planet planet_saturn_pink(NULL);
-Clouds clouds(NULL);
-Clouds stars1(NULL);
-Clouds stars2(NULL);
-Clouds stars_bck(NULL);
 
 bool IsPointCloseToPoint(D2D1_POINT_2F a, D2D1_POINT_2F b, float d)
 {
@@ -321,7 +85,6 @@ bool IsPointCloseToPoint(D2D1_POINT_2F a, D2D1_POINT_2F b, float d)
     float dx = a.x - b.x;
     float dy = a.y - b.y;
     float distance = sqrt(dx * dx + dy * dy);
-
 
     // Check if the distance is smaller than d.
     return distance < d;
@@ -346,6 +109,7 @@ bool DidRocketHitRock(Rocket rocket, Asteroid astr) {
         )
         return true;
 }
+
 
 ID2D1Bitmap* load_bitmap(HWND hwnd, HRESULT hr, const LPCWSTR name, ID2D1Bitmap* lbitmap, IWICImagingFactory* pWICFactory)
 {
@@ -467,12 +231,6 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
     }
     case WM_PAINT:
     {
-        //protrusions:
-        int body_l_end_x = 120;
-        int body_r_end_x = 135;
-        int body_ends_y = 47;
-        int eng_ul_end_y = 90;
-
         if (GetAsyncKeyState(VK_RIGHT) < 0)
             rocket.move_right();
         if (GetAsyncKeyState(VK_LEFT) < 0)
@@ -482,7 +240,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
         if (GetAsyncKeyState(VK_DOWN) < 0)
             rocket.move_down();
 
-
+        //asteroida wyleciała już poza okno
         if (asteroid.right_end < rc.left && !game_over) 
         {
             int random_size = 80 + (rand() % 60);
@@ -492,7 +250,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
             asteroid = Asteroid(asteroid.bitmap, { (float)rc.right + random_size , random_y }, random_size);
             srand(time(NULL));
             int random_speed = 5 + (rand() % 3);
-            if (score == 0)
+            if (score == 0 || score == -1)
                 random_speed = 5;
             asteroid.set_speed(random_speed);
             score += 1;
@@ -504,42 +262,6 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
             ((initial_higth) / (rc.bottom - rc.top)), Point2F(0, 0));
         d2d_render_target->SetTransform(scale);
 
-        ID2D1SolidColorBrush* brush = nullptr;
-        ID2D1SolidColorBrush* brush_dark_grey = nullptr;
-        ID2D1SolidColorBrush* brush_red = nullptr;
-        ID2D1SolidColorBrush* brush_white = nullptr;
-        ID2D1SolidColorBrush* brush_blue = nullptr;
-        ID2D1SolidColorBrush* brush_yellow = nullptr;
-        ID2D1SolidColorBrush* brush_light_orange = nullptr;
-        ID2D1SolidColorBrush* brush_orange = nullptr;
-
-        // - Interfejsy do obs�ugi �cie�ki
-        ID2D1PathGeometry* path_rocket_body = nullptr;
-        ID2D1PathGeometry* path_rocket_top = nullptr;
-        ID2D1PathGeometry* path_rocket_bottom = nullptr;
-        ID2D1PathGeometry* engines_rocket_path = nullptr;
-        ID2D1GeometrySink* path_sink_rocket_body = nullptr;
-        ID2D1GeometrySink* path_sink_rocket_top = nullptr;
-        ID2D1GeometrySink* path_sink_rocket_bottom = nullptr;
-        ID2D1GeometrySink* engines_rocket_path_sink = nullptr;
-        ID2D1PathGeometry* path_fire_t = nullptr;
-        ID2D1PathGeometry* path_fire_m = nullptr;
-        ID2D1PathGeometry* path_fire_b = nullptr;
-        ID2D1GeometrySink* path_sink_fire_t = nullptr;
-        ID2D1GeometrySink* path_sink_fire_m = nullptr;
-        ID2D1GeometrySink* path_sink_fire_b = nullptr;
-
-
-        // Stałe z kolorami
-        D2D1_COLOR_F const brush_color_white = { .r = 1.0f, .g = 1.0f, .b = 1.0f, .a = 1.0f };
-        D2D1_COLOR_F const brush_color_black = { .r = 0, .g = 0, .b = 0, .a = 1 };
-        D2D1_COLOR_F const brush_dark_grey_color = { .r = 0.2f, .g = 0.2f, .b = 0.2f, .a = 1.0f };
-        D2D1_COLOR_F const brush_color_red = { .r = 1, .g = 0, .b = 0, .a = 1 };
-        D2D1_COLOR_F const brush_color_blue = { .r = 0, .g = 0.6, .b = 1, .a = 1 };
-        D2D1_COLOR_F const brush_color_yellow = { .r = 1, .g = 1, .b = 0, .a = 1 };
-        D2D1_COLOR_F const brush_color_light_orange = { .r = 255 / 255.0f, .g = 209 / 255.0f, .b = 50 / 255.0f, .a = 1 };
-        D2D1_COLOR_F const brush_color_orange = { .r = 255 / 255.0f, .g = 189 / 255.0f, .b = 0 / 255.0f, .a = 1 };
-
         // Utworzenie pędzli
         d2d_render_target->CreateSolidColorBrush(brush_color_black, &brush);
         d2d_render_target->CreateSolidColorBrush(brush_dark_grey_color, &brush_dark_grey);
@@ -549,18 +271,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
         d2d_render_target->CreateSolidColorBrush(brush_color_yellow, &brush_yellow);
         d2d_render_target->CreateSolidColorBrush(brush_color_light_orange, &brush_light_orange);
         d2d_render_target->CreateSolidColorBrush(brush_color_orange, &brush_orange);
-
-
-        //Pędzel gradient (linear) do ciała rakiety
-        ID2D1LinearGradientBrush* rocket_lin_grad_brush = nullptr;
-        ID2D1LinearGradientBrush* top_rocket_lin_grad_brush = nullptr;
-        ID2D1LinearGradientBrush* window_rocket_lin_grad_brush = nullptr;
-
-
-        //Kolory do gradientu linearnego dla rakiety
-        D2D1_COLOR_F const grey_for_gradient = { .r = 0.2f, .g = 0.2f, .b = 0.2f, .a = 1.0f };
-        D2D1_COLOR_F const light_grey_for_gradient = { .r = 0.98f, .g = 0.98f, .b = 0.98f, .a = 1.0f };
-
+        d2d_render_target->CreateSolidColorBrush(navy, &brush_navy);
 
         ID2D1GradientStopCollection* rockt_lin_grad_stops = NULL;
         D2D1_GRADIENT_STOP rockt_grad_stops_arr[2];
@@ -756,22 +467,12 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
             &window_rocket_lin_grad_brush
         );
 
-
-        D2D1_COLOR_F const navy = D2D1::ColorF(0.0f, 0.0f, 0.15f, 1.0f);
-        ID2D1SolidColorBrush* brush_navy;
-        d2d_render_target->CreateSolidColorBrush(navy, &brush_navy);
-
         planet_saturn_pink.set_center({ (float)rc.right - 200, (float)rc.top + 200 }, 125);
         clouds.set_center({ (float)rc.right - 400, (float)rc.top + 200 }, 335, 200);
         stars1.set_center({ (float)rc.right - 210, (float)rc.top + 200 }, 335, 200);
         stars2.set_center({ (float)rc.left + 300, (float)rc.bottom - 100 }, 305, 120);
         stars_bck.set_center({ half_x, half_y }, half_x + 70 , half_y + 60);
 
-
-        float brush_body_width = 5.0f;
-        float brush_eye_width = 3.0f;
-        float brush_mouth_width = 9.0f;
-        float brush_rocket_width = 3.5f;
 
         // Rysowanie
         d2d_render_target->BeginDraw();
@@ -784,7 +485,6 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
         if (DidRocketHitRock(rocket, asteroid) || game_over)
         {
             game_over = true;
-
             asteroid.set_center({ (float) rc.left,0 }, 0);
 
             int width_click_info = 415;
@@ -928,4 +628,45 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
     return 0;
     }
     return DefWindowProc(hwnd, uMsg, wParam, lParam);
+}
+
+void release_resources(ID2D1SolidColorBrush* brush, ID2D1SolidColorBrush* brush_dark_grey, ID2D1PathGeometry* path_rocket_body,
+    ID2D1PathGeometry* path_rocket_top, ID2D1PathGeometry* path_rocket_bottom, ID2D1PathGeometry* path_sink_rocket_body,
+    ID2D1PathGeometry* path_sink_rocket_top, ID2D1PathGeometry* path_sink_rocket_bottom, ID2D1LinearGradientBrush* rocket_lin_grad_brush,
+    ID2D1PathGeometry* engines_rocket_path, ID2D1PathGeometry* engines_rocket_path_sink, ID2D1SolidColorBrush* brush_blue,
+    ID2D1SolidColorBrush* brush_red, ID2D1SolidColorBrush* brush_yellow, ID2D1SolidColorBrush* brush_light_orange,
+    ID2D1SolidColorBrush* brush_orange, ID2D1SolidColorBrush* brush_white, ID2D1GradientStopCollection* rockt_lin_grad_stops,
+    ID2D1LinearGradientBrush* top_rocket_lin_grad_brush, ID2D1GradientStopCollection* top_rockt_lin_grad_stops,
+    ID2D1LinearGradientBrush* window_rocket_lin_grad_brush, ID2D1GradientStopCollection* window_rockt_grad_stops_arr,
+    ID2D1PathGeometry* path_fire_t, ID2D1PathGeometry* path_sink_fire_t, ID2D1PathGeometry* path_fire_m,
+    ID2D1PathGeometry* path_sink_fire_m, ID2D1PathGeometry* path_fire_b, ID2D1PathGeometry* path_sink_fire_b)
+{
+    if (brush) brush->Release();
+    if (brush_dark_grey) brush_dark_grey->Release();
+    if (path_rocket_body) path_rocket_body->Release();
+    if (path_rocket_top) path_rocket_top->Release();
+    if (path_rocket_bottom) path_rocket_bottom->Release();
+    if (path_sink_rocket_body) path_sink_rocket_body->Release();
+    if (path_sink_rocket_top) path_sink_rocket_top->Release();
+    if (path_sink_rocket_bottom) path_sink_rocket_bottom->Release();
+    if (rocket_lin_grad_brush) rocket_lin_grad_brush->Release();
+    if (engines_rocket_path) engines_rocket_path->Release();
+    if (engines_rocket_path_sink) engines_rocket_path_sink->Release();
+    if (brush_blue) brush_blue->Release();
+    if (brush_red) brush_red->Release();
+    if (brush_yellow) brush_yellow->Release();
+    if (brush_light_orange) brush_light_orange->Release();
+    if (brush_orange) brush_orange->Release();
+    if (brush_white) brush_white->Release();
+    if (rockt_lin_grad_stops) rockt_lin_grad_stops->Release();
+    if (top_rocket_lin_grad_brush) top_rocket_lin_grad_brush->Release();
+    if (top_rockt_lin_grad_stops) top_rockt_lin_grad_stops->Release();
+    if (window_rocket_lin_grad_brush) window_rocket_lin_grad_brush->Release();
+    if (window_rockt_grad_stops_arr) window_rockt_grad_stops_arr->Release();
+    if (path_fire_t) path_fire_t->Release();
+    if (path_sink_fire_t) path_sink_fire_t->Release();
+    if (path_fire_m) path_fire_m->Release();
+    if (path_sink_fire_m) path_sink_fire_m->Release();
+    if (path_fire_b) path_fire_b->Release();
+    if (path_sink_fire_b) path_sink_fire_b->Release();
 }

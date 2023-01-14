@@ -143,7 +143,13 @@
     <ClCompile Include="projekt_zal.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Asteroid.h" />
+    <ClInclude Include="CloudsOrStars.h" />
+    <ClInclude Include="Colors.h" />
+    <ClInclude Include="Paths.h" />
+    <ClInclude Include="Planet.h" />
     <ClInclude Include="projekt_zal.h" />
+    <ClInclude Include="Rocket.h" />
   </ItemGroup>
   <ItemGroup>
     <Image Include="..\..\..\Documents\asteroida.png" />
