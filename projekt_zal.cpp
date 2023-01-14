@@ -18,6 +18,7 @@ IDWriteTextFormat* text_format = nullptr;
 //WCHAR const NAPIS[] = L"Score: 0";
 //wchar_t* NAPIS;// = L"Score: 0";
 int score = 0;
+bool game_over = false;
 
 class Rocket
 {
@@ -283,6 +284,9 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PWSTR pCmdLine
     MSG msg = { };
     while (GetMessage(&msg, NULL, 0, 0) > 0)
     {
+        //if (game_over) {
+
+        //}
         TranslateMessage(&msg);
         DispatchMessage(&msg);
     }
@@ -416,7 +420,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
         int size = 100;
         srand(time(NULL));
         int offset = rc.top + size;
-        int range = rc.bottom - size - rc.top;
+        int range = rc.bottom - size - size/2 - rc.top;
         float random = offset + (rand() % range);
 
         asteroid.set_center({ (float)rc.right + size, random }, size);
@@ -498,8 +502,6 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 
         name = L"my_stars_background.png";
         stars_bck.bitmap = load_bitmap(hwnd, hr, name, stars2.bitmap, pWICFactory);
-
-       
 
 
         return 0;
@@ -649,7 +651,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
             rocket.move_down();
 
 
-        if (asteroid.right_end < rc.left) {
+        if (asteroid.right_end < rc.left && !game_over) {
             //srand(time(NULL));
             /*float percentage_of_rocket_in_window = ((eng_ur_point_y * 2) / (rc.bottom - rc.top)) * 100;
             float percentage_to_leave_for_rocket = 2 * percentage_of_rocket_in_window + 1;
@@ -663,6 +665,8 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
             asteroid = Asteroid(asteroid.bitmap, { (float)rc.right + random_size , random_y }, random_size);
             srand(time(NULL));
             int random_speed = 5 + (rand() % 3);
+            if (score == 0)
+                random_speed = 5;
             asteroid.set_speed(random_speed);
             score += 1;
         }
@@ -1012,76 +1016,127 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
         stars2.set_center({ (float)rc.left + 300, (float)rc.bottom - 100 }, 305, 120);
         stars_bck.set_center({ half_x, half_y }, half_x + 70 , half_y + 60);
 
-        // Rysowanie
-        d2d_render_target->BeginDraw();
-        d2d_render_target->Clear(brush_color_white);
-
-        d2d_render_target->FillRectangle(D2D1::RectF(0, 0, rc.right, rc.bottom), brush_navy);
 
         float brush_body_width = 5.0f;
         float brush_eye_width = 3.0f;
         float brush_mouth_width = 9.0f;
         float brush_rocket_width = 3.5f;
 
+        // Rysowanie
+        d2d_render_target->BeginDraw();
+        d2d_render_target->Clear(brush_color_white);
 
-        if (DidRocketHitRock(rocket, asteroid))
-            exit(score);
+        d2d_render_target->FillRectangle(D2D1::RectF(0, 0, rc.right, rc.bottom), brush_navy);
 
-        std::wstringstream ss;
-        ss << L"Score: " << score;
-        std::wstring result = ss.str();
-        wchar_t NAPIS[13];
-        for (int i = 0; i < 13; i++) {
-            NAPIS[i] = ' ';
+
+        if (DidRocketHitRock(rocket, asteroid) || game_over)
+        {
+            game_over = true;
+            int width_click_info = 415;
+            int button_rect_left = half_x - width_click_info;
+            int button_rect_up = half_y;
+            int button_rect_right = half_x + width_click_info;
+            int button_rect_bot = half_y + 125;
+            d2d_render_target->FillRectangle(
+                D2D1::RectF(button_rect_left, button_rect_up, button_rect_right, button_rect_bot),
+                brush_red
+            );
+            d2d_render_target->DrawText(
+                L"Game Over",
+                wcslen(L"Game Over"),
+                text_format,
+                D2D1::RectF(half_x - 240, half_y - 300, half_x + 240, half_y - 170),
+                brush_white
+            );
+            d2d_render_target->DrawText(
+                L"Click here to restart",
+                wcslen(L"Click here to restart"),
+                text_format,
+                D2D1::RectF(button_rect_left, button_rect_up, button_rect_right, button_rect_bot),
+                brush_white
+            );
+            
+            POINT cursor_pos;
+            GetCursorPos(&cursor_pos);
+
+            // Convert the cursor position to client coordinates
+            ScreenToClient(hwnd, &cursor_pos);
+
+            int mouse_x = cursor_pos.x;
+            int mouse_y = cursor_pos.y;
+            
+            if (GetAsyncKeyState(VK_LBUTTON) < 0) {
+                if (mouse_x >= button_rect_left && mouse_x <= button_rect_right &&
+                    mouse_y >= button_rect_up && mouse_y <= button_rect_bot)
+                {
+                    score = -1;
+                    rocket.center.y = half_y;
+                    rocket.center.x = half_x - 400;
+                    game_over = false;
+                }
+            }
         }
-        result.copy(NAPIS, result.size());
-        NAPIS[result.size()] = 0;
+            
         
-
-        d2d_render_target->DrawText(
-            NAPIS,
-            sizeof(NAPIS) / sizeof(NAPIS[0]),
-            text_format,
-            RectF(
-                150.0f, 80.0f,
-                static_cast<FLOAT>(rc.right),
-                static_cast<FLOAT>(rc.bottom)
-            ),
-            brush_white
-        );
         
-
-        d2d_render_target->DrawBitmap(stars1.bitmap, D2D1::RectF(stars1.left_end, stars1.top_end,
-            stars1.right_end, stars1.bottom_end));
-        d2d_render_target->DrawBitmap(stars2.bitmap, D2D1::RectF(stars2.left_end, stars2.top_end,
-            stars2.right_end, stars2.bottom_end));
         d2d_render_target->DrawBitmap(stars_bck.bitmap, D2D1::RectF(stars_bck.left_end, stars_bck.top_end,
             stars_bck.right_end, stars_bck.bottom_end));
+        
+        if (!game_over) {
+            std::wstringstream ss;
+            ss << L"Score: " << score;
+            std::wstring result = ss.str();
+            wchar_t NAPIS[13];
+            for (int i = 0; i < 13; i++) {
+                NAPIS[i] = ' ';
+            }
+            result.copy(NAPIS, result.size());
+            NAPIS[result.size()] = 0;
 
-        d2d_render_target->DrawBitmap(planet_saturn_pink.bitmap, D2D1::RectF(planet_saturn_pink.left_end, planet_saturn_pink.top_end,
-            planet_saturn_pink.right_end, planet_saturn_pink.bottom_end));
-        d2d_render_target->DrawBitmap(asteroid.bitmap, D2D1::RectF(asteroid.left_end, asteroid.top_end,
-            asteroid.right_end, asteroid.bottom_end));
-        d2d_render_target->DrawBitmap(clouds.bitmap, D2D1::RectF(clouds.left_end, clouds.top_end,
-            clouds.right_end, clouds.bottom_end));
 
-        d2d_render_target->DrawGeometry(path_rocket_top, brush, brush_rocket_width);
-        d2d_render_target->FillGeometry(path_rocket_top, top_rocket_lin_grad_brush);
+            d2d_render_target->DrawText(
+                NAPIS,
+                sizeof(NAPIS) / sizeof(NAPIS[0]),
+                text_format,
+                RectF(
+                    150.0f, 80.0f,
+                    static_cast<FLOAT>(rc.right),
+                    static_cast<FLOAT>(rc.bottom)
+                ),
+                brush_white
+            );
+
+            d2d_render_target->DrawBitmap(stars1.bitmap, D2D1::RectF(stars1.left_end, stars1.top_end,
+                stars1.right_end, stars1.bottom_end));
+            d2d_render_target->DrawBitmap(stars2.bitmap, D2D1::RectF(stars2.left_end, stars2.top_end,
+                stars2.right_end, stars2.bottom_end));
+            
+
+            d2d_render_target->DrawBitmap(planet_saturn_pink.bitmap, D2D1::RectF(planet_saturn_pink.left_end, planet_saturn_pink.top_end,
+                planet_saturn_pink.right_end, planet_saturn_pink.bottom_end));
+            d2d_render_target->DrawBitmap(asteroid.bitmap, D2D1::RectF(asteroid.left_end, asteroid.top_end,
+                asteroid.right_end, asteroid.bottom_end));
+            d2d_render_target->DrawBitmap(clouds.bitmap, D2D1::RectF(clouds.left_end, clouds.top_end,
+                clouds.right_end, clouds.bottom_end));
+
+            d2d_render_target->DrawGeometry(path_rocket_top, brush, brush_rocket_width);
+            d2d_render_target->FillGeometry(path_rocket_top, top_rocket_lin_grad_brush);
 
 
-        d2d_render_target->DrawGeometry(path_rocket_fire, brush, brush_rocket_width);
-        d2d_render_target->FillGeometry(path_rocket_fire, brush_yellow);
+            d2d_render_target->DrawGeometry(path_rocket_fire, brush, brush_rocket_width);
+            d2d_render_target->FillGeometry(path_rocket_fire, brush_yellow);
 
-        d2d_render_target->DrawGeometry(path_rocket_bottom, brush, brush_rocket_width);
-        d2d_render_target->FillGeometry(path_rocket_bottom, brush1);
+            d2d_render_target->DrawGeometry(path_rocket_bottom, brush, brush_rocket_width);
+            d2d_render_target->FillGeometry(path_rocket_bottom, brush1);
 
-        d2d_render_target->DrawGeometry(engines_rocket_path, brush, brush_rocket_width);
-        d2d_render_target->FillGeometry(engines_rocket_path, brush_red);
+            d2d_render_target->DrawGeometry(engines_rocket_path, brush, brush_rocket_width);
+            d2d_render_target->FillGeometry(engines_rocket_path, brush_red);
 
-        d2d_render_target->DrawGeometry(path_rocket_body, brush, brush_rocket_width);
-        d2d_render_target->FillGeometry(path_rocket_body, rocket_lin_grad_brush);
-        d2d_render_target->DrawEllipse(ell, brush, brush_rocket_width, nullptr);
-        d2d_render_target->FillEllipse(ell, window_rocket_lin_grad_brush);
+            d2d_render_target->DrawGeometry(path_rocket_body, brush, brush_rocket_width);
+            d2d_render_target->FillGeometry(path_rocket_body, rocket_lin_grad_brush);
+            d2d_render_target->DrawEllipse(ell, brush, brush_rocket_width, nullptr);
+            d2d_render_target->FillEllipse(ell, window_rocket_lin_grad_brush);
+        }
 
 
 
