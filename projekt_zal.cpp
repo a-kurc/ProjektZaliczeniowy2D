@@ -15,7 +15,9 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 IWICImagingFactory* pWICFactory = NULL;
 IDWriteFactory* write_factory = nullptr;
 IDWriteTextFormat* text_format = nullptr;
-WCHAR const NAPIS[] = L"Cześć Świecie";
+//WCHAR const NAPIS[] = L"Score: 0";
+//wchar_t* NAPIS;// = L"Score: 0";
+int score = 0;
 
 class Rocket
 {
@@ -246,12 +248,12 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PWSTR pCmdLine
         reinterpret_cast<IUnknown**>(&write_factory)
     );
     write_factory->CreateTextFormat(
-        L"Times New Roman",
+        L"Calibri",
         nullptr,
         DWRITE_FONT_WEIGHT_BOLD,
         DWRITE_FONT_STYLE_NORMAL,
         DWRITE_FONT_STRETCH_NORMAL,
-        150.0f,
+        100.0f,
         L"en-us",
         &text_format
     );
@@ -284,10 +286,6 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PWSTR pCmdLine
         TranslateMessage(&msg);
         DispatchMessage(&msg);
     }
-
- 
-    
-
 
 
     return 0;
@@ -666,6 +664,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
             srand(time(NULL));
             int random_speed = 5 + (rand() % 3);
             asteroid.set_speed(random_speed);
+            score += 1;
         }
 
         asteroid.set_center({ asteroid.center.x -= asteroid.speed, asteroid.center.y }, asteroid.size);
@@ -1026,7 +1025,18 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 
 
         if (DidRocketHitRock(rocket, asteroid))
-            exit(1);
+            exit(score);
+
+        std::wstringstream ss;
+        ss << L"Score: " << score;
+        std::wstring result = ss.str();
+        wchar_t NAPIS[13];
+        for (int i = 0; i < 13; i++) {
+            NAPIS[i] = ' ';
+        }
+        result.copy(NAPIS, result.size());
+        NAPIS[result.size()] = 0;
+        
 
         d2d_render_target->DrawText(
             NAPIS,
@@ -1037,7 +1047,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
                 static_cast<FLOAT>(rc.right),
                 static_cast<FLOAT>(rc.bottom)
             ),
-            brush
+            brush_white
         );
         
 

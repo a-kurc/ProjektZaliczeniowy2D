@@ -22,6 +22,8 @@
 #include <d2d1_1.h>
 #include <dwrite_3.h>	// i do³¹czyæ dwrite.lib do projektu
 #include <dwrite.h>
+#include <sstream>
+#include <cstdio>
 #pragma comment(lib, "windowscodecs.lib")
 #pragma comment(lib, "d2d1")
 #pragma comment(lib, "windowscodecs")
