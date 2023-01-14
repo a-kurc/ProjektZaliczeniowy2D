@@ -7,22 +7,15 @@ using namespace globals;
 
 LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 
-//ID2D1Bitmap* asteroid_bitmap = NULL;
-//ID2D1Bitmap* planet_saturn_pink_bitmap = NULL;
-//ID2D1Bitmap* clouds_bitmap = NULL;
-//ID2D1Bitmap* stars1 = NULL;
-//ID2D1Bitmap* stars2 = NULL;
 IWICImagingFactory* pWICFactory = NULL;
 IDWriteFactory* write_factory = nullptr;
 IDWriteTextFormat* text_format = nullptr;
-//WCHAR const NAPIS[] = L"Score: 0";
-//wchar_t* NAPIS;// = L"Score: 0";
+
 int score = 0;
 bool game_over = false;
 int t_protrusion = 30;
 int m_protrusion = 0;
 int b_protrusion = 50;
-int counter = 0;
 
 class Rocket
 {
@@ -42,13 +35,6 @@ public:
     int bot_r_end_x;
     int bot_l_end_x;
     int bot_ends_y;
-    /*/int fire_end_u_x;
-    int fire_end_m_x;
-    int fire_end_d_x;
-    int fire_um_x;
-    int fire_md_x;
-    int fire_um_y;
-    int fire_md_y;*/
     int centr_windw_x;
     int window_r;
     int eng_start_x;
@@ -84,8 +70,7 @@ public:
 
     void set_attributes(int body_l_end_x, int body_r_end_x, int body_ends_y, int body_l_point_x, int body_r_point_x, int body_l_point_y,
         int body_r_point_y, int body_rounding_x, int top_end_x, int top_rounding_x, int top_rounding_y, int bot_r_end_x,
-        int bot_l_end_x, int bot_ends_y, /*int fire_end_u_x, int fire_end_m_x, int fire_end_d_x, int fire_um_x, int fire_md_x,
-        int fire_um_y, int fire_md_y,*/ int centr_windw_x, int window_r, int eng_start_x, int eng_ur_point_x, int eng_ul_point_x,
+        int bot_l_end_x, int bot_ends_y, int centr_windw_x, int window_r, int eng_start_x, int eng_ur_point_x, int eng_ul_point_x,
         int eng_l_end_x, int eng_dl_point_x, int eng_dr_point_x, int eng_mid_point_x, int eng_ur_point_y, int eng_ul_point_y,
         int eng_ul_end_y, int eng_dl_end_y, int eng_dr_point_y, int eng_dl_point_y)
     {
@@ -103,13 +88,6 @@ public:
         this->bot_r_end_x = bot_r_end_x;
         this->bot_l_end_x = bot_l_end_x;
         this->bot_ends_y = bot_ends_y;
-        /*this->fire_end_u_x = fire_end_u_x;
-        this->fire_end_m_x = fire_end_m_x;
-        this->fire_end_d_x = fire_end_d_x;
-        this->fire_um_x = fire_um_x;
-        this->fire_md_x = fire_md_x;
-        this->fire_um_y = fire_um_y;
-        this->fire_md_y = fire_md_y;*/
         this->centr_windw_x = centr_windw_x;
         this->window_r = window_r;
         this->eng_start_x = eng_start_x;
@@ -346,7 +324,6 @@ ID2D1Bitmap* load_bitmap(HWND hwnd, HRESULT hr, const LPCWSTR name, ID2D1Bitmap*
     if (FAILED(hr))
     {
         MessageBox(hwnd, L"Error loading bitmap from file.", L"Error", MB_ICONERROR);
-        //return -1;
     }
     IWICBitmapFrameDecode* pFrame = NULL;
 
@@ -354,27 +331,23 @@ ID2D1Bitmap* load_bitmap(HWND hwnd, HRESULT hr, const LPCWSTR name, ID2D1Bitmap*
     if (FAILED(hr))
     {
         MessageBox(hwnd, L"Error getting frame from bitmap decoder.", L"Error", MB_ICONERROR);
-        //return -1;
     }
     IWICFormatConverter* pConverter = NULL;
     hr = pWICFactory->CreateFormatConverter(&pConverter);
     if (FAILED(hr))
     {
         MessageBox(hwnd, L"Error creating format converter.", L"Error", MB_ICONERROR);
-        //return -1;
     }
     hr = pConverter->Initialize(pFrame, GUID_WICPixelFormat32bppPBGRA, WICBitmapDitherTypeNone, NULL, 0.0, WICBitmapPaletteTypeCustom);
     if (FAILED(hr))
     {
         MessageBox(hwnd, L"Error initializing format converter.", L"Error", MB_ICONERROR);
-        //return -1;
     }
 
     hr = d2d_render_target->CreateBitmapFromWicBitmap(pConverter, NULL, &lbitmap);
     if (FAILED(hr))
     {
         MessageBox(hwnd, L"Error creating Direct2D bitmap from WIC bitmap.", L"Error", MB_ICONERROR);
-        //return -1;
     }
 
     d2d_render_target->SetDpi(96.0f, 96.0f);
@@ -385,10 +358,6 @@ ID2D1Bitmap* load_bitmap(HWND hwnd, HRESULT hr, const LPCWSTR name, ID2D1Bitmap*
 LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
     GetClientRect(hwnd, &rc);
-    ID2D1PathGeometry* path_mouth = nullptr;
-    ID2D1GeometrySink* path_sink_mouth = nullptr;
-    D2D1_POINT_2F ellipse_center_eye1 = {};
-    D2D1_POINT_2F ellipse_center_eye2 = {};
     half_y = (rc.bottom - rc.top) / 2;
     half_x = (rc.right - rc.left) / 2;
 
@@ -411,16 +380,6 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
                     static_cast<UINT32>(rc.top))),
             &d2d_render_target);
 
-        ellipse_center_eye1.x = half_x - 118;
-        ellipse_center_eye1.y = half_y - 95;
-        ellipse_center_eye2.x = half_x + 118;
-        ellipse_center_eye2.y = half_y - 95;
-
-        ellipse_center_pupil1.x = ellipse_center_eye1.x - half_x;
-        ellipse_center_pupil1.y = ellipse_center_eye1.y - half_y;
-        ellipse_center_pupil2.x = ellipse_center_eye2.x - half_x;
-        ellipse_center_pupil2.y = ellipse_center_eye2.y - half_y;
-
         int size = 100;
         srand(time(NULL));
         int offset = rc.top + size;
@@ -440,7 +399,6 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 
         CoInitializeEx(nullptr, COINIT_APARTMENTTHREADED);
 
-
         HRESULT hr = CoCreateInstance(CLSID_WICImagingFactory, NULL, CLSCTX_INPROC_SERVER, IID_PPV_ARGS(&pWICFactory));
         if (FAILED(hr))
         {
@@ -448,49 +406,8 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
             return -1;
         }
 
-        /*
-        // Load bitmap from file
-        IWICBitmapDecoder* pDecoder = NULL;
-        hr = pWICFactory->CreateDecoderFromFilename(L"asteroida.png", NULL, GENERIC_READ, WICDecodeMetadataCacheOnLoad, &pDecoder);
-        if (FAILED(hr))
-        {
-            MessageBox(hwnd, L"Error loading bitmap from file.", L"Error", MB_ICONERROR);
-            return -1;
-        }
-        IWICBitmapFrameDecode* pFrame = NULL;
-        hr = pDecoder->GetFrame(0, &pFrame);
-        if (FAILED(hr))
-        {
-            MessageBox(hwnd, L"Error getting frame from bitmap decoder.", L"Error", MB_ICONERROR);
-            return -1;
-        }
-        IWICFormatConverter* pConverter = NULL;
-        hr = pWICFactory->CreateFormatConverter(&pConverter);
-        if (FAILED(hr))
-        {
-            MessageBox(hwnd, L"Error creating format converter.", L"Error", MB_ICONERROR);
-            return -1;
-        }
-        hr = pConverter->Initialize(pFrame, GUID_WICPixelFormat32bppPBGRA, WICBitmapDitherTypeNone, NULL, 0.0, WICBitmapPaletteTypeCustom);
-        if (FAILED(hr))
-        {
-            MessageBox(hwnd, L"Error initializing format converter.", L"Error", MB_ICONERROR);
-            return -1;
-        }
-
-        hr = d2d_render_target->CreateBitmapFromWicBitmap(pConverter, NULL, &asteroid.bitmap);
-        if (FAILED(hr))
-        {
-            MessageBox(hwnd, L"Error creating Direct2D bitmap from WIC bitmap.", L"Error", MB_ICONERROR);
-            return -1;
-        }
-
-        d2d_render_target->SetDpi(96.0f, 96.0f);
-        */
-        //ID2D1Bitmap* chbitmap = asteroid.bitmap;
         LPCWSTR name = L"asteroida.png";
         asteroid.bitmap = load_bitmap(hwnd, hr, name, asteroid.bitmap, pWICFactory);
-
 
         name = L"saturn_pink_3.png";
         planet_saturn_pink.bitmap = load_bitmap(hwnd, hr, name, planet_saturn_pink.bitmap, pWICFactory);
@@ -507,7 +424,6 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
         name = L"my_stars_background.png";
         stars_bck.bitmap = load_bitmap(hwnd, hr, name, stars2.bitmap, pWICFactory);
 
-
         return 0;
     }
     case WM_DESTROY:
@@ -516,93 +432,6 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
         if (d2d_factory) d2d_factory->Release();
 
         PostQuitMessage(0);
-        return 0;
-    }
-    case WM_MOUSEMOVE:
-    {
-        ellipse_center_eye1.x = half_x - 118;
-        ellipse_center_eye1.y = half_y - 95;
-        ellipse_center_eye2.x = half_x + 118;
-        ellipse_center_eye2.y = half_y - 95;
-
-        ellipse_center_pupil1.x = ellipse_center_eye1.x;
-        ellipse_center_pupil1.y = ellipse_center_eye1.y;
-        ellipse_center_pupil2.x = ellipse_center_eye2.x;
-        ellipse_center_pupil2.y = ellipse_center_eye2.y;
-        if (radius_of_middleeye_squared >= pow((LOWORD(lParam) - ellipse_center_eye1.x), 2)
-            + pow((HIWORD(lParam) - ellipse_center_eye1.y), 2))
-        {
-            ellipse_center_pupil1.x = LOWORD(lParam);
-            ellipse_center_pupil1.y = HIWORD(lParam);
-        }
-        else
-        {
-            // lewe oko d�ugo�� du�ego tr�jk�ta w poziomie 
-            float llen_big_tr_in_x = abs(LOWORD(lParam) - ellipse_center_eye1.x);
-            // lewe oko d�ugo�� du�ego tr�jk�ta w pionie 
-            float llen_big_tr_in_y = abs(HIWORD(lParam) - ellipse_center_eye1.y);
-            // preciwprostok�tna du�ego tr�jk�ta
-            float llen_big_tr_across = sqrt(pow(llen_big_tr_in_x, 2) + pow(llen_big_tr_in_y, 2));
-            // lewe oko d�ugo�� ma�ego tr�jk�ta w poziomie 
-            float llen_small_tr_in_x = (llen_big_tr_in_x * radius_of_middleeye) / llen_big_tr_across;
-            // lewe oko d�ugo�� ma�ego tr�jk�ta w pionie 
-            float llen_small_tr_in_y = (llen_big_tr_in_y * radius_of_middleeye) / llen_big_tr_across;
-
-            // je�li x punktu kursora jest na prawo od �rodka oka
-            if (LOWORD(lParam) > ellipse_center_eye1.x)
-                //�rodek �renicy idzie o llen_small_tr_in_x w prawo
-                ellipse_center_pupil1.x = ellipse_center_eye1.x + llen_small_tr_in_x;
-            else
-                //�rodek �renicy idzie o llen_small_tr_in_x w lewo
-                ellipse_center_pupil1.x = ellipse_center_eye1.x - llen_small_tr_in_x;
-
-            // je�li y punktu kursora jest wy�ej od �rodka oka
-            if (HIWORD(lParam) < ellipse_center_eye1.y)
-                //�rodek �renicy idzie o llen_small_tr_in_y w g�r�
-                ellipse_center_pupil1.y = ellipse_center_eye1.y - llen_small_tr_in_y;
-            else
-                //�rodek �renicy idzie o llen_small_tr_in_y w d�
-                ellipse_center_pupil1.y = ellipse_center_eye1.y + llen_small_tr_in_y;
-        }
-        if (radius_of_middleeye_squared >= pow((LOWORD(lParam) - ellipse_center_eye2.x), 2)
-            + pow((HIWORD(lParam) - ellipse_center_eye2.y), 2))
-        {
-            ellipse_center_pupil2.x = LOWORD(lParam);
-            ellipse_center_pupil2.y = HIWORD(lParam);
-        }
-        else
-        {
-            // prawe oko d�ugo�� du�ego tr�jk�ta w poziomie 
-            float llen_big_tr_in_x = abs(LOWORD(lParam) - ellipse_center_eye2.x);
-            // prawe oko d�ugo�� du�ego tr�jk�ta w pionie 
-            float llen_big_tr_in_y = abs(HIWORD(lParam) - ellipse_center_eye2.y);
-            // preciwprostok�tna du�ego tr�jk�ta
-            float llen_big_tr_across = sqrt(pow(llen_big_tr_in_x, 2) + pow(llen_big_tr_in_y, 2));
-            // prawe oko d�ugo�� ma�ego tr�jk�ta w poziomie 
-            float llen_small_tr_in_x = (llen_big_tr_in_x * radius_of_middleeye) / llen_big_tr_across;
-            // prawe oko d�ugo�� ma�ego tr�jk�ta w pionie 
-            float llen_small_tr_in_y = (llen_big_tr_in_y * radius_of_middleeye) / llen_big_tr_across;
-
-            // je�li x punktu kursora jest na prawo od �rodka oka
-            if (LOWORD(lParam) > ellipse_center_eye2.x)
-                //�rodek �renicy idzie o llen_small_tr_in_x w prawo
-                ellipse_center_pupil2.x = ellipse_center_eye2.x + llen_small_tr_in_x;
-            else
-                //�rodek �renicy idzie o llen_small_tr_in_x w lewo
-                ellipse_center_pupil2.x = ellipse_center_eye2.x - llen_small_tr_in_x;
-
-            // je�li y punktu kursora jest wy�ej od �rodka oka
-            if (HIWORD(lParam) < ellipse_center_eye2.y)
-                //�rodek �renicy idzie o llen_small_tr_in_y w g�r�
-                ellipse_center_pupil2.y = ellipse_center_eye2.y - llen_small_tr_in_y;
-            else
-                //�rodek �renicy idzie o llen_small_tr_in_y w d�
-                ellipse_center_pupil2.y = ellipse_center_eye2.y + llen_small_tr_in_y;
-        }
-        ellipse_center_pupil1.x -= half_x;
-        ellipse_center_pupil1.y -= half_y;
-        ellipse_center_pupil2.x -= half_x;
-        ellipse_center_pupil2.y -= half_y;
         return 0;
     }
     case WM_PAINT:
@@ -655,13 +484,8 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
             rocket.move_down();
 
 
-        if (asteroid.right_end < rc.left && !game_over) {
-            //srand(time(NULL));
-            /*float percentage_of_rocket_in_window = ((eng_ur_point_y * 2) / (rc.bottom - rc.top)) * 100;
-            float percentage_to_leave_for_rocket = 2 * percentage_of_rocket_in_window + 1;
-            float percentage_rock_can_take = 100 - percentage_to_leave_for_rocket;
-            int max_rock = (rc.bottom - rc.top) * percentage_rock_can_take / 100;
-            int min_rock = max_rock/8;*/
+        if (asteroid.right_end < rc.left && !game_over) 
+        {
             int random_size = 80 + (rand() % 60);
             int offset = rc.top + random_size;
             int range = rc.bottom - 3 * random_size - rc.top;
@@ -677,23 +501,8 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 
         asteroid.set_center({ asteroid.center.x -= asteroid.speed, asteroid.center.y }, asteroid.size);
 
-
-
-        Matrix3x2F scale = Matrix3x2F::Scale((initial_width) / (rc.right - rc.left),
-            ((initial_higth) / (rc.bottom - rc.top)), Point2F(0, 0));
-        d2d_render_target->SetTransform(scale);
-
-        ellipse_center_eye1.x = half_x - 118;
-        ellipse_center_eye1.y = half_y - 95;
-        ellipse_center_eye2.x = half_x + 118;
-        ellipse_center_eye2.y = half_y - 95;
-        ellipse_center_pupil1.x += half_x;
-        ellipse_center_pupil1.y += half_y;
-        ellipse_center_pupil2.x += half_x;
-        ellipse_center_pupil2.y += half_y;
-
         ID2D1SolidColorBrush* brush = nullptr;
-        ID2D1SolidColorBrush* brush1 = nullptr;
+        ID2D1SolidColorBrush* brush_dark_grey = nullptr;
         ID2D1SolidColorBrush* brush_red = nullptr;
         ID2D1SolidColorBrush* brush_white = nullptr;
         ID2D1SolidColorBrush* brush_blue = nullptr;
@@ -702,16 +511,10 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
         ID2D1SolidColorBrush* brush_orange = nullptr;
 
         // - Interfejsy do obs�ugi �cie�ki
-        ID2D1PathGeometry* path = nullptr;
-        ID2D1GeometrySink* path_sink = nullptr;
-        ID2D1PathGeometry* path_nose = nullptr;
-        ID2D1GeometrySink* path_sink_nose = nullptr;
         ID2D1PathGeometry* path_rocket_body = nullptr;
         ID2D1PathGeometry* path_rocket_top = nullptr;
         ID2D1PathGeometry* path_rocket_bottom = nullptr;
-        //ID2D1PathGeometry* path_rocket_fire = nullptr;
         ID2D1PathGeometry* engines_rocket_path = nullptr;
-        //ID2D1GeometrySink* path_sink_rocket_fire = nullptr;
         ID2D1GeometrySink* path_sink_rocket_body = nullptr;
         ID2D1GeometrySink* path_sink_rocket_top = nullptr;
         ID2D1GeometrySink* path_sink_rocket_bottom = nullptr;
@@ -724,16 +527,10 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
         ID2D1GeometrySink* path_sink_fire_b = nullptr;
 
 
-        // Sta�e z kolorami
-        D2D1_COLOR_F const brush_color_white =
-        { .r = 1.0f, .g = 1.0f, .b = 1.0f, .a = 1.0f };
-        D2D1_COLOR_F const brush_color_black =
-        { .r = 0, .g = 0, .b = 0, .a = 1 };
-        // Kolory dla nosa
-        D2D1_COLOR_F const brush1_color =
-        { .r = 0.2f, .g = 0.2f, .b = 0.2f, .a = 1.0f };
-
-        //Kolory dla rakiety
+        // Stałe z kolorami
+        D2D1_COLOR_F const brush_color_white = { .r = 1.0f, .g = 1.0f, .b = 1.0f, .a = 1.0f };
+        D2D1_COLOR_F const brush_color_black = { .r = 0, .g = 0, .b = 0, .a = 1 };
+        D2D1_COLOR_F const brush_dark_grey_color = { .r = 0.2f, .g = 0.2f, .b = 0.2f, .a = 1.0f };
         D2D1_COLOR_F const brush_color_red = { .r = 1, .g = 0, .b = 0, .a = 1 };
         D2D1_COLOR_F const brush_color_blue = { .r = 0, .g = 0.6, .b = 1, .a = 1 };
         D2D1_COLOR_F const brush_color_yellow = { .r = 1, .g = 1, .b = 0, .a = 1 };
@@ -742,7 +539,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 
         // Utworzenie pędzli
         d2d_render_target->CreateSolidColorBrush(brush_color_black, &brush);
-        d2d_render_target->CreateSolidColorBrush(brush1_color, &brush1);
+        d2d_render_target->CreateSolidColorBrush(brush_dark_grey_color, &brush_dark_grey);
         d2d_render_target->CreateSolidColorBrush(brush_color_red, &brush_red);
         d2d_render_target->CreateSolidColorBrush(brush_color_white, &brush_white);
         d2d_render_target->CreateSolidColorBrush(brush_color_blue, &brush_blue);
@@ -750,88 +547,11 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
         d2d_render_target->CreateSolidColorBrush(brush_color_light_orange, &brush_light_orange);
         d2d_render_target->CreateSolidColorBrush(brush_color_orange, &brush_orange);
 
-        // Utworzenie i zbudowanie geometrii �cie�ki (cia�a)
-        d2d_factory->CreatePathGeometry(&path);
-        path->Open(&path_sink);
-
-        path_sink->BeginFigure(Point2F(half_x - 180, half_y - 100), D2D1_FIGURE_BEGIN_FILLED);
-        path_sink->AddBezier(BezierSegment(Point2F(half_x - 400, half_y + 310),
-            Point2F(half_x - 200, half_y + 315), Point2F(half_x, half_y + 316)));
-        path_sink->AddBezier(BezierSegment(Point2F(half_x + 200, half_y + 315),
-            Point2F(half_x + 400, half_y + 310), Point2F(half_x + 180, half_y - 100)));
-        path_sink->AddBezier(BezierSegment(Point2F(half_x + 350, half_y - 200),
-            Point2F(half_x + 200, half_y - 370), Point2F(half_x + 100, half_y - 230)));
-        path_sink->AddQuadraticBezier(QuadraticBezierSegment(
-            Point2F(half_x, half_y - 300), Point2F(half_x - 100, half_y - 230)));
-        path_sink->AddBezier(BezierSegment(Point2F(half_x - 200, half_y - 370),
-            Point2F(half_x - 350, half_y - 200), Point2F(half_x - 180, half_y - 100)));
-        path_sink->EndFigure(D2D1_FIGURE_END_OPEN);
-        path_sink->Close();
-
-        // Utworzenie i zbudowanie geometrii nosa
-        d2d_factory->CreatePathGeometry(&path_nose);
-        path_nose->Open(&path_sink_nose);
-        path_sink_nose->BeginFigure(Point2F(half_x - 75, half_y + 50), D2D1_FIGURE_BEGIN_FILLED);
-        path_sink_nose->AddBezier(BezierSegment(Point2F(half_x - 100, half_y - 10),
-            Point2F(half_x + 100, half_y - 10), Point2F(half_x + 75, half_y + 50)));
-        path_sink_nose->AddQuadraticBezier(QuadraticBezierSegment(
-            Point2F(half_x, half_y + 175), Point2F(half_x - 75, half_y + 50)));
-        path_sink_nose->EndFigure(D2D1_FIGURE_END_OPEN);
-        path_sink_nose->Close();
-
-        // Utworzenie i zbudowanie geometrii ust
-        d2d_factory->CreatePathGeometry(&path_mouth);
-        path_mouth->Open(&path_sink_mouth);
-        path_sink_mouth->BeginFigure(Point2F(half_x - 100, half_y + 160), D2D1_FIGURE_BEGIN_HOLLOW);
-        if (GetAsyncKeyState(VK_LBUTTON) >= 0)
-            path_sink_mouth->AddBezier(BezierSegment(
-                Point2F(half_x - 70, half_y + 125), Point2F(half_x + 70, half_y + 125),
-                Point2F(half_x + 100, half_y + 160)));
-        else
-            path_sink_mouth->AddBezier(BezierSegment(
-                Point2F(half_x - 70, half_y + 200), Point2F(half_x + 70, half_y + 200),
-                Point2F(half_x + 100, half_y + 160)));
-        path_sink_mouth->EndFigure(D2D1_FIGURE_END_OPEN);
-        path_sink_mouth->Close();
-
 
         //P�dzel gradient (linear) do cia�a rakiety
         ID2D1LinearGradientBrush* rocket_lin_grad_brush = nullptr;
         ID2D1LinearGradientBrush* top_rocket_lin_grad_brush = nullptr;
         ID2D1LinearGradientBrush* window_rocket_lin_grad_brush = nullptr;
-
-        // - P�dzel - gradient promienisty
-        ID2D1RadialGradientBrush* rad_brush_eye1 = nullptr;
-        ID2D1RadialGradientBrush* rad_brush_eye2 = nullptr;
-        ID2D1RadialGradientBrush* rad_brush_body = nullptr;
-        ID2D1GradientStopCollection* rad_stops_eye1 = nullptr;
-        ID2D1GradientStopCollection* rad_stops_eye2 = nullptr;
-        ID2D1GradientStopCollection* rad_stops_body = nullptr;
-        UINT const NUM_RAD_STOPS_EYE = 2;
-        UINT const NUM_RAD_STOPS_BODY = 5;
-        D2D1_GRADIENT_STOP rad_stops_data_eye[NUM_RAD_STOPS_EYE];
-        D2D1_GRADIENT_STOP rad_stops_data_body[NUM_RAD_STOPS_BODY];
-
-        // Sta�e ustawienia geometrii
-        D2D1_POINT_2F const center_body = { .x = half_x, .y = half_y };
-        D2D1_POINT_2F const eye_ellipse_radii = { .x = r_eye, .y = r_eye };
-        D2D1_POINT_2F const pupil_ellipse_radii = { .x = r_pupil, .y = r_pupil };
-
-        rad_stops_data_eye[0] =
-        { .position = 0.75f, .color = ColorF(1.0f, 1.0f, 1.0f, 1) };
-        rad_stops_data_eye[1] =
-        { .position = 1.0f, .color = ColorF(0.68f, 0.68f, 0.68f, 1) };
-
-        rad_stops_data_body[0] =
-        { .position = 0.1, .color = ColorF(1.0f, 0.9f, 1.0f, 1) };
-        rad_stops_data_body[1] =
-        { .position = 0.55f, .color = ColorF(0.0f, 0.87f, 0.0f, 1) };
-        rad_stops_data_body[2] =
-        { .position = 0.70f, .color = ColorF(0.0f, 0.75f, 0.0f, 1) };
-        rad_stops_data_body[3] =
-        { .position = 0.8f, .color = ColorF(0.0f, 0.6f, 0.0f, 1) };
-        rad_stops_data_body[4] =
-        { .position = 0.95f, .color = ColorF(0.0f, 0.45f, 0.0f, 1) };
 
 
         //Kolory do gradientu linearnego dla rakiety
@@ -890,38 +610,9 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
         );
 
 
-        // Utworzenie gradientu promienistego
-        d2d_render_target->CreateGradientStopCollection(
-            rad_stops_data_eye, NUM_RAD_STOPS_EYE, &rad_stops_eye1);
-        if (rad_stops_eye1) {
-            d2d_render_target->CreateRadialGradientBrush(
-                RadialGradientBrushProperties(ellipse_center_eye1,
-                    Point2F(0, 0), 95, 95),
-                rad_stops_eye1, &rad_brush_eye1);
-        }
-        d2d_render_target->CreateGradientStopCollection(
-            rad_stops_data_eye, NUM_RAD_STOPS_EYE, &rad_stops_eye2);
-        if (rad_stops_eye2) {
-            d2d_render_target->CreateRadialGradientBrush(
-                RadialGradientBrushProperties(ellipse_center_eye2,
-                    Point2F(0, 0), 95, 95),
-                rad_stops_eye2, &rad_brush_eye2);
-        }
-        d2d_render_target->CreateGradientStopCollection(
-            rad_stops_data_body, NUM_RAD_STOPS_BODY, &rad_stops_body);
-        if (rad_stops_body) {
-            d2d_render_target->CreateRadialGradientBrush(
-                RadialGradientBrushProperties(center_body,
-                    Point2F(0, 70), 350, 350),
-                rad_stops_body, &rad_brush_body);
-        }
-
-
-
         rocket.set_attributes(120, 135, 47, 20, 60, 90, 90, 20, body_r_end_x + 50, body_r_end_x + 20, 35, body_l_end_x, body_l_end_x + 15,
             body_ends_y, /*bot_l_end_x + 50, bot_l_end_x + 55, bot_l_end_x + 45, bot_l_end_x + 30, bot_l_end_x + 25, bot_ends_y - 10,
             bot_ends_y - 10,*/ rocket.center.x + 40, 40, 12, 90, 95, 160, 100, 120, 90, 145, 125, 90, eng_ul_end_y - 10, 115, 95);
-
 
         d2d_factory->CreatePathGeometry(&path_rocket_body);
         path_rocket_body->Open(&path_sink_rocket_body);
@@ -961,43 +652,17 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
         path_sink_rocket_bottom->EndFigure(D2D1_FIGURE_END_OPEN);
         path_sink_rocket_bottom->Close();
 
-        /*d2d_factory->CreatePathGeometry(&path_rocket_fire);
-        path_rocket_fire->Open(&path_sink_rocket_fire);
-        path_sink_rocket_fire->BeginFigure(Point2F(rocket.center.x - bot_l_end_x, rocket.center.y - bot_ends_y), D2D1_FIGURE_BEGIN_FILLED);
-        path_sink_rocket_fire->AddLine(Point2F(rocket.center.x - fire_end_u_x, rocket.center.y - bot_ends_y));
-        path_sink_rocket_fire->AddLine(Point2F(rocket.center.x - fire_um_x, rocket.center.y - fire_um_y));
-        path_sink_rocket_fire->AddLine(Point2F(rocket.center.x - fire_end_m_x, rocket.center.y));
-        path_sink_rocket_fire->AddLine(Point2F(rocket.center.x - fire_md_x, rocket.center.y + fire_md_y));
-        path_sink_rocket_fire->AddLine(Point2F(rocket.center.x - fire_end_d_x, rocket.center.y + bot_ends_y));
-        path_sink_rocket_fire->AddLine(Point2F(rocket.center.x - bot_l_end_x, rocket.center.y + bot_ends_y));
-        path_sink_rocket_fire->EndFigure(D2D1_FIGURE_END_OPEN);
-        path_sink_rocket_fire->Close();*/
-
         
-        if (t_protrusion < 70)
-            t_protrusion+=2;
-        else
-            t_protrusion = 0;
+        if (t_protrusion < 70) t_protrusion +=2; else t_protrusion = 0;
+        if (m_protrusion < 70) m_protrusion += 2; else m_protrusion = 0;
+        if (b_protrusion < 70) b_protrusion += 2; else b_protrusion = 0;
 
-        if (m_protrusion < 70)
-            m_protrusion += 2;
-        else
-            m_protrusion = 0;
-
-        if (b_protrusion < 70)
-            b_protrusion += 2;
-        else
-            b_protrusion = 0;
-
-        int tt_end_line_x = 150 + t_protrusion;
+        int t_end_line_x = 150 + t_protrusion;
         int t_top_end_x = 200 + t_protrusion;
-        int tb_end_line_x = 150 + t_protrusion;
-        int mt_end_line_x = 160 + m_protrusion;
+        int m_end_line_x = 160 + m_protrusion;
         int m_top_end_x = 210 + m_protrusion;
-        int mb_end_line_x = 160 + m_protrusion;
-        int bt_end_line_x = 140 + b_protrusion;
+        int b_end_line_x = 140 + b_protrusion;
         int b_top_end_x = 190 + b_protrusion;
-        int bb_end_line_x = 140 + b_protrusion;
 
         int tt_end_line_y = rocket.body_ends_y;
         int t_topt_end_y = rocket.body_ends_y - 6;
@@ -1017,11 +682,9 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
         d2d_factory->CreatePathGeometry(&path_fire_t);
         path_fire_t->Open(&path_sink_fire_t);
         path_sink_fire_t->BeginFigure(Point2F(rocket.center.x - bot_l_end_x, rocket.center.y - bot_ends_y), D2D1_FIGURE_BEGIN_FILLED);
-        path_sink_fire_t->AddLine(Point2F(rocket.center.x - tt_end_line_x, rocket.center.y - tt_end_line_y));
+        path_sink_fire_t->AddLine(Point2F(rocket.center.x - t_end_line_x, rocket.center.y - tt_end_line_y));
         path_sink_fire_t->AddBezier(BezierSegment(Point2F(rocket.center.x - t_top_end_x, rocket.center.y - t_topt_end_y),
-            Point2F(rocket.center.x - t_top_end_x, rocket.center.y - t_topb_end_y), Point2F(rocket.center.x - tb_end_line_x, rocket.center.y - tb_end_line_y)));
-        //path_sink_fire_t->AddQuadraticBezier(QuadraticBezierSegment(Point2F(rocket.center.x - t_top_end_x, rocket.center.y - t_top_end_y),
-          //  Point2F(rocket.center.x - tb_end_line_x, rocket.center.y - tb_end_line_y)));
+            Point2F(rocket.center.x - t_top_end_x, rocket.center.y - t_topb_end_y), Point2F(rocket.center.x - t_end_line_x, rocket.center.y - tb_end_line_y)));
         path_sink_fire_t->AddLine(Point2F(rocket.center.x - bot_l_end_x, rocket.center.y - tb_end_line_y));
         path_sink_fire_t->EndFigure(D2D1_FIGURE_END_OPEN);
         path_sink_fire_t->Close();
@@ -1029,11 +692,9 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
         d2d_factory->CreatePathGeometry(&path_fire_m);
         path_fire_m->Open(&path_sink_fire_m);
         path_sink_fire_m->BeginFigure(Point2F(rocket.center.x - bot_l_end_x, rocket.center.y - mt_end_line_y), D2D1_FIGURE_BEGIN_FILLED);
-        path_sink_fire_m->AddLine(Point2F(rocket.center.x - mt_end_line_x, rocket.center.y - mt_end_line_y));
+        path_sink_fire_m->AddLine(Point2F(rocket.center.x - m_end_line_x, rocket.center.y - mt_end_line_y));
         path_sink_fire_m->AddBezier(BezierSegment(Point2F(rocket.center.x - m_top_end_x, rocket.center.y - m_topt_end_y),
-            Point2F(rocket.center.x - m_top_end_x, rocket.center.y - m_topb_end_y), Point2F(rocket.center.x - mb_end_line_x, rocket.center.y - mb_end_line_y)));
-        //path_sink_fire_t->AddQuadraticBezier(QuadraticBezierSegment(Point2F(rocket.center.x - t_top_end_x, rocket.center.y - t_top_end_y),
-          //  Point2F(rocket.center.x - tb_end_line_x, rocket.center.y - tb_end_line_y)));
+            Point2F(rocket.center.x - m_top_end_x, rocket.center.y - m_topb_end_y), Point2F(rocket.center.x - m_end_line_x, rocket.center.y - mb_end_line_y)));
         path_sink_fire_m->AddLine(Point2F(rocket.center.x - bot_l_end_x, rocket.center.y - mb_end_line_y));
         path_sink_fire_m->EndFigure(D2D1_FIGURE_END_OPEN);
         path_sink_fire_m->Close();
@@ -1041,16 +702,14 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
         d2d_factory->CreatePathGeometry(&path_fire_b);
         path_fire_b->Open(&path_sink_fire_b);
         path_sink_fire_b->BeginFigure(Point2F(rocket.center.x - bot_l_end_x, rocket.center.y - bt_end_line_y), D2D1_FIGURE_BEGIN_FILLED);
-        path_sink_fire_b->AddLine(Point2F(rocket.center.x - bt_end_line_x, rocket.center.y - bt_end_line_y));
+        path_sink_fire_b->AddLine(Point2F(rocket.center.x - b_end_line_x, rocket.center.y - bt_end_line_y));
         path_sink_fire_b->AddBezier(BezierSegment(Point2F(rocket.center.x - b_top_end_x, rocket.center.y - b_topt_end_y),
-            Point2F(rocket.center.x - b_top_end_x, rocket.center.y - b_topb_end_y), Point2F(rocket.center.x - bb_end_line_x, rocket.center.y - bb_end_line_y)));
-        //path_sink_fire_t->AddQuadraticBezier(QuadraticBezierSegment(Point2F(rocket.center.x - t_top_end_x, rocket.center.y - t_top_end_y),
-          //  Point2F(rocket.center.x - tb_end_line_x, rocket.center.y - tb_end_line_y)));
+            Point2F(rocket.center.x - b_top_end_x, rocket.center.y - b_topb_end_y), Point2F(rocket.center.x - b_end_line_x, rocket.center.y - bb_end_line_y)));
         path_sink_fire_b->AddLine(Point2F(rocket.center.x - bot_l_end_x, rocket.center.y - bb_end_line_y));
         path_sink_fire_b->EndFigure(D2D1_FIGURE_END_OPEN);
         path_sink_fire_b->Close();
 
-        //ComPtr<ID2D1StrokeStyle> stroke = CreateStrokeStyle();
+
         const D2D1_ELLIPSE ell = Ellipse(Point2F(centr_windw_x, rocket.center.y), window_r, window_r);
 
 
@@ -1098,7 +757,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
         );
 
 
-        D2D1_COLOR_F navy = D2D1::ColorF(0.0f, 0.0f, 0.15f, 1.0f);
+        D2D1_COLOR_F const navy = D2D1::ColorF(0.0f, 0.0f, 0.15f, 1.0f);
         ID2D1SolidColorBrush* brush_navy;
         d2d_render_target->CreateSolidColorBrush(navy, &brush_navy);
 
@@ -1174,13 +833,9 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
                 }
             }
         }
-            
+
         
-        
-        
-        
-        if (!game_over) {
-            
+        if (!game_over) {            
             std::wstringstream ss;
             ss << L"Score: " << score;
             std::wstring result = ss.str();
@@ -1191,7 +846,6 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
             result.copy(NAPIS, result.size());
             NAPIS[result.size()] = 0;
 
-            
             d2d_render_target->DrawText(
                 NAPIS,
                 sizeof(NAPIS) / sizeof(NAPIS[0]),
@@ -1202,8 +856,6 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
                     static_cast<FLOAT>(rc.bottom)
                 ),
                 brush_white
-                
-
             );
             
             
@@ -1211,8 +863,6 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
                 stars1.right_end, stars1.bottom_end));
             d2d_render_target->DrawBitmap(stars2.bitmap, D2D1::RectF(stars2.left_end, stars2.top_end,
                 stars2.right_end, stars2.bottom_end));
-            
-
             d2d_render_target->DrawBitmap(planet_saturn_pink.bitmap, D2D1::RectF(planet_saturn_pink.left_end, planet_saturn_pink.top_end,
                 planet_saturn_pink.right_end, planet_saturn_pink.bottom_end));
             d2d_render_target->DrawBitmap(asteroid.bitmap, D2D1::RectF(asteroid.left_end, asteroid.top_end,
@@ -1222,9 +872,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 
             d2d_render_target->DrawGeometry(path_rocket_top, brush, brush_rocket_width);
             d2d_render_target->FillGeometry(path_rocket_top, top_rocket_lin_grad_brush);
-
             
-
             d2d_render_target->DrawGeometry(path_fire_t, brush_orange, brush_rocket_width);
             d2d_render_target->FillGeometry(path_fire_t, brush_orange);
             d2d_render_target->DrawGeometry(path_fire_b, brush_light_orange, brush_rocket_width);
@@ -1232,11 +880,8 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
             d2d_render_target->DrawGeometry(path_fire_m, brush_yellow, brush_rocket_width);
             d2d_render_target->FillGeometry(path_fire_m, brush_yellow);
             
-            //d2d_render_target->DrawGeometry(path_rocket_fire, brush, brush_rocket_width);
-            //d2d_render_target->FillGeometry(path_rocket_fire, brush_yellow);
-
             d2d_render_target->DrawGeometry(path_rocket_bottom, brush, brush_rocket_width);
-            d2d_render_target->FillGeometry(path_rocket_bottom, brush1);
+            d2d_render_target->FillGeometry(path_rocket_bottom, brush_dark_grey);
 
             d2d_render_target->DrawGeometry(engines_rocket_path, brush, brush_rocket_width);
             d2d_render_target->FillGeometry(engines_rocket_path, brush_red);
@@ -1248,115 +893,13 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
         }
 
 
-
-        // Cia�o z gradientem
-        /*d2d_render_target->FillGeometry(path, rad_brush_body);
-        d2d_render_target->DrawGeometry(path, brush, brush_body_width);
-
-
-        // Oczy z gradientem
-        d2d_render_target->FillEllipse(
-            Ellipse(ellipse_center_eye1, eye_ellipse_radii.x, eye_ellipse_radii.y),
-            rad_brush_eye1);
-        d2d_render_target->DrawEllipse(
-            Ellipse(ellipse_center_eye1, eye_ellipse_radii.x, eye_ellipse_radii.y),
-            brush, brush_eye_width);
-
-        d2d_render_target->FillEllipse(
-            Ellipse(ellipse_center_eye2, eye_ellipse_radii.x, eye_ellipse_radii.y),
-            rad_brush_eye2);
-        d2d_render_target->DrawEllipse(
-            Ellipse(ellipse_center_eye2, eye_ellipse_radii.x, eye_ellipse_radii.y),
-            brush, brush_eye_width);
-
-        // �rednice
-        d2d_render_target->FillEllipse(
-            Ellipse(ellipse_center_pupil1, pupil_ellipse_radii.x, pupil_ellipse_radii.y),
-            brush);
-        d2d_render_target->DrawEllipse(
-            Ellipse(ellipse_center_pupil1, pupil_ellipse_radii.x, pupil_ellipse_radii.y),
-            brush, brush_eye_width);
-
-        d2d_render_target->FillEllipse(
-            Ellipse(ellipse_center_pupil2, pupil_ellipse_radii.x, pupil_ellipse_radii.y),
-            brush);
-        d2d_render_target->DrawEllipse(
-            Ellipse(ellipse_center_pupil2, pupil_ellipse_radii.x, pupil_ellipse_radii.y),
-            brush, brush_eye_width);
-
-        // Nos i usta
-        time += 0.03f;
-        float angle = 15.0f * sin(time);
-        // Zachowujemy macierz transofmacji
-        D2D1_MATRIX_3X2_F transformation_to_save;
-        d2d_render_target->GetTransform(&transformation_to_save);
-        // Wprawiamy w ruch render_target (�eby zrobi� ruchome nos i usta)
-        Matrix3x2F transformation;
-        d2d_render_target->GetTransform(&transformation);
-        Matrix3x2F rotate = Matrix3x2F::Rotation(angle, Point2F(half_x, half_y + 30));
-        rotate.SetProduct(rotate, transformation);
-        d2d_render_target->SetTransform(rotate);
-        // Rysujemy nos i usta na ruchomym render_targer
-        d2d_render_target->FillGeometry(path_nose, brush1);
-        d2d_render_target->DrawGeometry(path_nose, brush, brush_eye_width);
-        d2d_render_target->DrawGeometry(path_mouth, brush, brush_mouth_width);
-        // Przywracamy render_target do stanu nieruchomego (�eby nic poza nosem i ustami si� nie rusza�o)
-        d2d_render_target->SetTransform(transformation_to_save);*/
-
-
-        // "R�cznie" zdefiniowane dane powierzchni bitmapy
-        UINT const bmp_width = 2;
-        UINT const bmp_height = 2;
-        array<BYTE, 4 * bmp_width * bmp_height> bmp_bits = {    // dane BGRA     
-          0, 0, 230, 230,         128, 128, 128, 128,    // opacity 90%, 50%
-          255, 255, 255, 255,     0, 0, 255, 255
-        };
-        // ...
-        // Interfejs reprezentuj�cy bitmap�
-        ID2D1Bitmap* bitmap = nullptr;
-        // ...
-        // Sta�e kolor�w
-        D2D1_COLOR_F const clear_color =
-        { .r = 0.75f, .g = 0.5f, .b = 0.25f, .a = 1.0f };
-        D2D1_COLOR_F const brush_color =
-        { .r = 0.0f, .g = 0.5f, .b = 0.0f, .a = 1.0f };
-        // ...
-        // Utworzenie interfejsu bitmapy
-        d2d_render_target->CreateBitmap(
-            SizeU(bmp_width, bmp_height),
-            bmp_bits.data(),
-            4 * bmp_width,
-            BitmapProperties(
-                PixelFormat(DXGI_FORMAT_B8G8R8A8_UNORM,
-                    D2D1_ALPHA_MODE_PREMULTIPLIED)
-            ),
-            &bitmap);
-
-        // Rysowanie bitmapy
-        /*d2d_render_target->DrawBitmap(
-            bitmap,
-            RectF(1000, 200, 1300, 500),
-            1.0f,
-            D2D1_BITMAP_INTERPOLATION_MODE_NEAREST_NEIGHBOR);*/
-            //D2D1_BITMAP_INTERPOLATION_MODE_LINEAR);
-
-
         d2d_render_target->EndDraw();
 
-        if (bitmap) bitmap->Release();
         if (brush) brush->Release();
-        if (brush1) brush1->Release();
-        if (path) path->Release();
-        if (path_nose) path_nose->Release();
-        if (path_mouth) path_mouth->Release();
+        if (brush_dark_grey) brush_dark_grey->Release();
         if (path_rocket_body) path_rocket_body->Release();
         if (path_rocket_top) path_rocket_top->Release();
         if (path_rocket_bottom) path_rocket_bottom->Release();
-        //if (path_rocket_fire) path_rocket_fire->Release();
-        //if (path_sink_rocket_fire) path_sink_rocket_fire->Release();
-        if (path_sink) path_sink->Release();
-        if (path_sink_nose) path_sink_nose->Release();
-        if (path_sink_mouth) path_sink_mouth->Release();
         if (path_sink_rocket_body) path_sink_rocket_body->Release();
         if (path_sink_rocket_top) path_sink_rocket_top->Release();
         if (path_sink_rocket_bottom) path_sink_rocket_bottom->Release();
@@ -1369,12 +912,6 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
         if (brush_light_orange) brush_light_orange->Release();
         if (brush_orange) brush_orange->Release();
         if (brush_white) brush_white->Release();
-        if (rad_brush_eye1) rad_brush_eye1->Release();
-        if (rad_brush_eye2) rad_brush_eye2->Release();
-        if (rad_brush_body) rad_brush_body->Release();
-        if (rad_stops_eye1) rad_stops_eye1->Release();
-        if (rad_stops_eye2) rad_stops_eye2->Release();
-        if (rad_stops_body) rad_stops_body->Release();
         if (rockt_lin_grad_stops) rockt_lin_grad_stops->Release();
         if (top_rocket_lin_grad_brush) top_rocket_lin_grad_brush->Release();
         if (top_rockt_lin_grad_stops) top_rockt_lin_grad_stops->Release();
@@ -1386,12 +923,8 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
         if (path_sink_fire_m) path_sink_fire_m->Release();
         if (path_fire_b) path_fire_b->Release();
         if (path_sink_fire_b) path_sink_fire_b->Release();
-
     }
-    ellipse_center_pupil1.x -= half_x;
-    ellipse_center_pupil1.y -= half_y;
-    ellipse_center_pupil2.x -= half_x;
-    ellipse_center_pupil2.y -= half_y;
+
     return 0;
     }
     return DefWindowProc(hwnd, uMsg, wParam, lParam);
