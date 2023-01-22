@@ -28,7 +28,7 @@
 #pragma comment(lib, "d2d1")
 #pragma comment(lib, "windowscodecs")
 #pragma comment(lib, "Dwrite")
-#pragma comment(lib, "d2d1")
+
 
 using D2D1::RenderTargetProperties;
 using D2D1::HwndRenderTargetProperties;
@@ -85,6 +85,7 @@ namespace globals
 	int body_r_end_x = 135;
 	int body_ends_y = 47;
 	int eng_ul_end_y = 90;
+	D2D1_ELLIPSE ell;
 }
 
 #endif

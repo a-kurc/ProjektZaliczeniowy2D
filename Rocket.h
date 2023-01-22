@@ -59,16 +59,16 @@ public:
         center.y = y;
     }
     void move_right() {
-        center.x += 5;
+        center.x += 6;
     }
     void move_left() {
-        center.x -= 5;
+        center.x -= 6;
     }
     void move_up() {
-        center.y -= 5;
+        center.y -= 6;
     }
     void move_down() {
-        center.y += 5;
+        center.y += 6;
     }
 
     void set_attributes(int body_l_end_x, int body_r_end_x, int body_ends_y, int body_l_point_x, int body_r_point_x, int body_l_point_y,

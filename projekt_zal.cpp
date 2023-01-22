@@ -13,6 +13,7 @@ using namespace globals;
 
 LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 
+Asteroid asteroid(NULL, { 500, 500 }, 100);
 
 int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PWSTR pCmdLine, int nCmdShow)
 {
@@ -79,37 +80,6 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PWSTR pCmdLine
     return 0;
 }
 
-bool IsPointCloseToPoint(D2D1_POINT_2F a, D2D1_POINT_2F b, float d)
-{
-    // Calculate the distance from point a to point b.
-    float dx = a.x - b.x;
-    float dy = a.y - b.y;
-    float distance = sqrt(dx * dx + dy * dy);
-
-    // Check if the distance is smaller than d.
-    return distance < d;
-}
-
-bool DidRocketHitRock(Rocket rocket, Asteroid astr) {
-
-    if (IsPointCloseToPoint(astr.center, { (float)rocket.top_end_x + rocket.center.x,
-            (float)rocket.center.y }, astr.size)
-        || IsPointCloseToPoint(astr.center, { (float)rocket.body_r_end_x + rocket.center.x,
-            (float)rocket.center.y + (float)rocket.body_ends_y }, astr.size)
-        || IsPointCloseToPoint(astr.center, { (float)rocket.body_r_end_x + rocket.center.x,
-            (float)rocket.center.y - (float)rocket.body_ends_y }, astr.size)
-        || IsPointCloseToPoint(astr.center, { (float)rocket.center.x + rocket.body_r_point_x,
-            (float)rocket.center.y - (float)rocket.body_r_point_y }, astr.size - 18)
-        || IsPointCloseToPoint(astr.center, { (float)rocket.center.x + rocket.body_r_point_x,
-            (float)rocket.center.y + (float)rocket.body_r_point_y }, astr.size - 18)
-        || IsPointCloseToPoint(astr.center, { (float)rocket.center.x - rocket.eng_ur_point_x,
-            (float)rocket.center.y + (float)rocket.eng_ur_point_y }, astr.size - 26)
-        || IsPointCloseToPoint(astr.center, { (float)rocket.center.x - rocket.eng_ur_point_x,
-            (float)rocket.center.y - (float)rocket.eng_ur_point_y }, astr.size - 26)
-        )
-        return true;
-}
-
 
 ID2D1Bitmap* load_bitmap(HWND hwnd, HRESULT hr, const LPCWSTR name, ID2D1Bitmap* lbitmap, IWICImagingFactory* pWICFactory)
 {
@@ -148,6 +118,267 @@ ID2D1Bitmap* load_bitmap(HWND hwnd, HRESULT hr, const LPCWSTR name, ID2D1Bitmap*
     d2d_render_target->SetDpi(96.0f, 96.0f);
 
     return lbitmap;
+}
+
+/*
+Windowproc{
+swicth:
+WM_CREATE:
+    onCreate();
+WM_PAINT:
+    onPaint();
+WM_DESTROY:
+    onDestroy();
+}
+*/
+
+void create_brushes()
+{
+    d2d_render_target->CreateSolidColorBrush(brush_color_black, &brush);
+    d2d_render_target->CreateSolidColorBrush(brush_dark_grey_color, &brush_dark_grey);
+    d2d_render_target->CreateSolidColorBrush(brush_color_blue, &brush_blue);
+    d2d_render_target->CreateSolidColorBrush(brush_color_yellow, &brush_yellow);
+    d2d_render_target->CreateSolidColorBrush(brush_color_red, &brush_red);
+    d2d_render_target->CreateSolidColorBrush(brush_color_white, &brush_white);
+    d2d_render_target->CreateSolidColorBrush(brush_color_light_orange, &brush_light_orange);
+    d2d_render_target->CreateSolidColorBrush(brush_color_orange, &brush_orange);
+    d2d_render_target->CreateSolidColorBrush(navy, &brush_navy);
+}
+
+void release_brushes()
+{
+    if (brush) brush->Release();
+    if (brush_dark_grey) brush_dark_grey->Release();
+    if (brush_blue) brush_blue->Release();
+    if (brush_red) brush_red->Release();
+    if (brush_yellow) brush_yellow->Release();
+    if (brush_light_orange) brush_light_orange->Release();
+    if (brush_orange) brush_orange->Release();
+    if (brush_white) brush_white->Release();
+    if (brush_navy) brush_navy->Release();
+}
+
+
+void create_rocket_paths()
+{
+    ID2D1GradientStopCollection* rockt_lin_grad_stops = NULL;
+    D2D1_GRADIENT_STOP rockt_grad_stops_arr[2];
+    rockt_grad_stops_arr[0].color = light_grey_for_gradient;
+    rockt_grad_stops_arr[0].position = 0.f;
+    rockt_grad_stops_arr[1].color = grey_for_gradient;
+    rockt_grad_stops_arr[1].position = 1.0f;
+    // Create the ID2D1GradientStopCollection from a previously
+    // declared array of D2D1_GRADIENT_STOP structs.
+    d2d_render_target->CreateGradientStopCollection(
+        rockt_grad_stops_arr,
+        2,
+        D2D1_GAMMA_2_2,
+        D2D1_EXTEND_MODE_CLAMP,
+        &rockt_lin_grad_stops
+    );
+
+    //Kolory do gradientu linearnego dla topu rakiety
+    ID2D1GradientStopCollection* top_rockt_lin_grad_stops = NULL;
+    D2D1_GRADIENT_STOP top_rockt_grad_stops_arr[2];
+    top_rockt_grad_stops_arr[0].color = D2D1::ColorF(D2D1::ColorF::Red, 1);
+    top_rockt_grad_stops_arr[0].position = 0.0f;
+    top_rockt_grad_stops_arr[1].color = grey_for_gradient;
+    top_rockt_grad_stops_arr[1].position = 1.0f;
+    // Create the ID2D1GradientStopCollection from a previously
+    // declared array of D2D1_GRADIENT_STOP structs.
+    d2d_render_target->CreateGradientStopCollection(
+        top_rockt_grad_stops_arr,
+        2,
+        D2D1_GAMMA_2_2,
+        D2D1_EXTEND_MODE_CLAMP,
+        &top_rockt_lin_grad_stops
+    );
+
+    //Kolory do gradientu linearnego dla okna rakiety
+    ID2D1GradientStopCollection* window_rockt_lin_grad_stops = NULL;
+    D2D1_GRADIENT_STOP window_rockt_grad_stops_arr[2];
+    window_rockt_grad_stops_arr[0].color = brush_color_blue;
+    window_rockt_grad_stops_arr[0].position = 0.0f;
+    window_rockt_grad_stops_arr[1].color = grey_for_gradient;
+    window_rockt_grad_stops_arr[1].position = 1.0f;
+    // Create the ID2D1GradientStopCollection from a previously
+    // declared array of D2D1_GRADIENT_STOP structs.
+    d2d_render_target->CreateGradientStopCollection(
+        window_rockt_grad_stops_arr,
+        2,
+        D2D1_GAMMA_2_2,
+        D2D1_EXTEND_MODE_CLAMP,
+        &window_rockt_lin_grad_stops
+    );
+
+
+    rocket.set_attributes(120, 135, 47, 20, 60, 90, 90, 20, body_r_end_x + 50, body_r_end_x + 20, 35, body_l_end_x, body_l_end_x + 15,
+        body_ends_y, rocket.center.x + 40, 40, 12, 90, 95, 160, 100, 120, 90, 145, 125, 90, eng_ul_end_y - 10, 115, 95);
+
+    d2d_factory->CreatePathGeometry(&path_rocket_body);
+    path_rocket_body->Open(&path_sink_rocket_body);
+    path_sink_rocket_body->BeginFigure(Point2F(rocket.center.x - body_l_end_x, rocket.center.y - body_ends_y), D2D1_FIGURE_BEGIN_FILLED);
+    path_sink_rocket_body->AddBezier(BezierSegment(
+        Point2F(rocket.center.x - rocket.body_l_point_x, rocket.center.y - rocket.body_l_point_y),
+        Point2F(rocket.center.x + rocket.body_r_point_x, rocket.center.y - rocket.body_r_point_y),
+        Point2F(rocket.center.x + body_r_end_x, rocket.center.y - body_ends_y)));
+    path_sink_rocket_body->AddQuadraticBezier(QuadraticBezierSegment(
+        Point2F(rocket.center.x + body_r_end_x - rocket.body_rounding_x, rocket.center.y),
+        Point2F(rocket.center.x + body_r_end_x, rocket.center.y + body_ends_y)));
+    path_sink_rocket_body->AddBezier(BezierSegment(Point2F(rocket.center.x + rocket.body_r_point_x, rocket.center.y + rocket.body_r_point_y),
+        Point2F(rocket.center.x - rocket.body_l_point_x, rocket.center.y + rocket.body_l_point_y),
+        Point2F(rocket.center.x - body_l_end_x, rocket.center.y + body_ends_y)));
+    path_sink_rocket_body->AddQuadraticBezier(QuadraticBezierSegment(
+        Point2F(rocket.center.x - body_l_end_x - rocket.body_rounding_x, rocket.center.y),
+        Point2F(rocket.center.x - body_l_end_x, rocket.center.y - body_ends_y)));
+    path_sink_rocket_body->EndFigure(D2D1_FIGURE_END_OPEN);
+    path_sink_rocket_body->Close();
+
+    d2d_factory->CreatePathGeometry(&path_rocket_top);
+    path_rocket_top->Open(&path_sink_rocket_top);
+    path_sink_rocket_top->BeginFigure(Point2F(rocket.center.x + body_r_end_x, rocket.center.y - body_ends_y), D2D1_FIGURE_BEGIN_FILLED);
+    path_sink_rocket_top->AddQuadraticBezier(QuadraticBezierSegment(
+        Point2F(rocket.center.x + rocket.top_rounding_x, rocket.center.y - rocket.top_rounding_y), Point2F(rocket.center.x + rocket.top_end_x, rocket.center.y)));
+    path_sink_rocket_top->AddQuadraticBezier(QuadraticBezierSegment(
+        Point2F(rocket.center.x + rocket.top_rounding_x, rocket.center.y + rocket.top_rounding_y), Point2F(rocket.center.x + body_r_end_x, rocket.center.y + body_ends_y)));
+    path_sink_rocket_top->AddQuadraticBezier(QuadraticBezierSegment(
+        Point2F(rocket.center.x + rocket.body_rounding_x, rocket.center.y), Point2F(rocket.center.x + body_r_end_x, rocket.center.y - body_ends_y)));
+    path_sink_rocket_top->EndFigure(D2D1_FIGURE_END_OPEN);
+    path_sink_rocket_top->Close();
+
+    d2d_factory->CreatePathGeometry(&path_rocket_bottom);
+    path_rocket_bottom->Open(&path_sink_rocket_bottom);
+    path_sink_rocket_bottom->BeginFigure(Point2F(rocket.center.x - body_l_end_x, rocket.center.y - rocket.bot_ends_y), D2D1_FIGURE_BEGIN_FILLED);
+    path_sink_rocket_bottom->AddQuadraticBezier(QuadraticBezierSegment(
+        Point2F(rocket.center.x - body_l_end_x - rocket.body_rounding_x, rocket.center.y), Point2F(rocket.center.x - body_l_end_x, rocket.center.y + rocket.bot_ends_y)));
+    path_sink_rocket_bottom->AddLine(Point2F(rocket.center.x - rocket.bot_l_end_x, rocket.center.y + rocket.bot_ends_y));
+    path_sink_rocket_bottom->AddQuadraticBezier(QuadraticBezierSegment(
+        Point2F(rocket.center.x - rocket.bot_l_end_x - rocket.body_rounding_x, rocket.center.y), Point2F(rocket.center.x - rocket.bot_l_end_x, rocket.center.y - rocket.bot_ends_y)));
+    path_sink_rocket_bottom->AddLine(Point2F(rocket.center.x - rocket.bot_r_end_x, rocket.center.y - rocket.bot_ends_y));
+    path_sink_rocket_bottom->EndFigure(D2D1_FIGURE_END_OPEN);
+    path_sink_rocket_bottom->Close();
+
+
+    if (t_protrusion < 70) t_protrusion += 4; else t_protrusion = 0;
+    if (m_protrusion < 70) m_protrusion += 4; else m_protrusion = 0;
+    if (b_protrusion < 70) b_protrusion += 4; else b_protrusion = 0;
+
+    rocket.set_fire(150 + t_protrusion, 200 + t_protrusion, 160 + m_protrusion, 210 + m_protrusion, 140 + b_protrusion, 190 + b_protrusion,
+        rocket.body_ends_y, rocket.body_ends_y - 6, rocket.body_ends_y - 34, rocket.body_ends_y - 40,
+        rocket.body_ends_y - 28, rocket.body_ends_y - 28 - 6, rocket.body_ends_y - 28 - 34, rocket.body_ends_y - 28 - 40,
+        rocket.body_ends_y - 56, rocket.body_ends_y - 56 - 6, rocket.body_ends_y - 56 - 34, rocket.body_ends_y - 56 - 40);
+
+    d2d_factory->CreatePathGeometry(&path_fire_t);
+    path_fire_t->Open(&path_sink_fire_t);
+    path_sink_fire_t->BeginFigure(Point2F(rocket.center.x - rocket.bot_l_end_x, rocket.center.y - rocket.bot_ends_y), D2D1_FIGURE_BEGIN_FILLED);
+    path_sink_fire_t->AddLine(Point2F(rocket.center.x - rocket.t_end_line_x, rocket.center.y - rocket.tt_end_line_y));
+    path_sink_fire_t->AddBezier(BezierSegment(Point2F(rocket.center.x - rocket.t_top_end_x, rocket.center.y - rocket.t_topt_end_y),
+        Point2F(rocket.center.x - rocket.t_top_end_x, rocket.center.y - rocket.t_topb_end_y),
+        Point2F(rocket.center.x - rocket.t_end_line_x, rocket.center.y - rocket.tb_end_line_y)));
+    path_sink_fire_t->AddLine(Point2F(rocket.center.x - rocket.bot_l_end_x, rocket.center.y - rocket.tb_end_line_y));
+    path_sink_fire_t->EndFigure(D2D1_FIGURE_END_OPEN);
+    path_sink_fire_t->Close();
+
+    d2d_factory->CreatePathGeometry(&path_fire_m);
+    path_fire_m->Open(&path_sink_fire_m);
+    path_sink_fire_m->BeginFigure(Point2F(rocket.center.x - rocket.bot_l_end_x, rocket.center.y - rocket.mt_end_line_y), D2D1_FIGURE_BEGIN_FILLED);
+    path_sink_fire_m->AddLine(Point2F(rocket.center.x - rocket.m_end_line_x, rocket.center.y - rocket.mt_end_line_y));
+    path_sink_fire_m->AddBezier(BezierSegment(Point2F(rocket.center.x - rocket.m_top_end_x, rocket.center.y - rocket.m_topt_end_y),
+        Point2F(rocket.center.x - rocket.m_top_end_x, rocket.center.y - rocket.m_topb_end_y),
+        Point2F(rocket.center.x - rocket.m_end_line_x, rocket.center.y - rocket.mb_end_line_y)));
+    path_sink_fire_m->AddLine(Point2F(rocket.center.x - rocket.bot_l_end_x, rocket.center.y - rocket.mb_end_line_y));
+    path_sink_fire_m->EndFigure(D2D1_FIGURE_END_OPEN);
+    path_sink_fire_m->Close();
+
+    d2d_factory->CreatePathGeometry(&path_fire_b);
+    path_fire_b->Open(&path_sink_fire_b);
+    path_sink_fire_b->BeginFigure(Point2F(rocket.center.x - rocket.bot_l_end_x, rocket.center.y - rocket.bt_end_line_y), D2D1_FIGURE_BEGIN_FILLED);
+    path_sink_fire_b->AddLine(Point2F(rocket.center.x - rocket.b_end_line_x, rocket.center.y - rocket.bt_end_line_y));
+    path_sink_fire_b->AddBezier(BezierSegment(Point2F(rocket.center.x - rocket.b_top_end_x, rocket.center.y - rocket.b_topt_end_y),
+        Point2F(rocket.center.x - rocket.b_top_end_x, rocket.center.y - rocket.b_topb_end_y),
+        Point2F(rocket.center.x - rocket.b_end_line_x, rocket.center.y - rocket.bb_end_line_y)));
+    path_sink_fire_b->AddLine(Point2F(rocket.center.x - rocket.bot_l_end_x, rocket.center.y - rocket.bb_end_line_y));
+    path_sink_fire_b->EndFigure(D2D1_FIGURE_END_OPEN);
+    path_sink_fire_b->Close();
+
+
+    ell = Ellipse(Point2F(rocket.centr_windw_x, rocket.center.y), rocket.window_r, rocket.window_r);
+
+
+    d2d_factory->CreatePathGeometry(&engines_rocket_path);
+    engines_rocket_path->Open(&engines_rocket_path_sink);
+    engines_rocket_path_sink->BeginFigure(Point2F(rocket.center.x - rocket.eng_start_x, rocket.center.y), D2D1_FIGURE_BEGIN_FILLED);
+    engines_rocket_path_sink->AddBezier(BezierSegment(
+        Point2F(rocket.center.x - rocket.eng_ur_point_x, rocket.center.y - rocket.eng_ur_point_y),
+        Point2F(rocket.center.x - rocket.eng_ul_point_x, rocket.center.y - rocket.eng_ul_point_y),
+        Point2F(rocket.center.x - rocket.eng_l_end_x, rocket.center.y - eng_ul_end_y)));
+    engines_rocket_path_sink->AddLine(Point2F(rocket.center.x - rocket.eng_l_end_x, rocket.center.y - rocket.eng_dl_end_y));
+    engines_rocket_path_sink->AddBezier(BezierSegment(
+        Point2F(rocket.center.x - rocket.eng_dl_point_x, rocket.center.y - rocket.eng_dl_point_y),
+        Point2F(rocket.center.x - rocket.eng_dr_point_x, rocket.center.y - rocket.eng_dr_point_y),
+        Point2F(rocket.center.x - rocket.eng_mid_point_x, rocket.center.y)));
+    engines_rocket_path_sink->AddBezier(BezierSegment(
+        Point2F(rocket.center.x - rocket.eng_dr_point_x, rocket.center.y + rocket.eng_dr_point_y),
+        Point2F(rocket.center.x - rocket.eng_dl_point_x, rocket.center.y + rocket.eng_dl_point_y),
+        Point2F(rocket.center.x - rocket.eng_l_end_x, rocket.center.y + rocket.eng_dl_end_y)));
+    engines_rocket_path_sink->AddLine(Point2F(rocket.center.x - rocket.eng_l_end_x, rocket.center.y + eng_ul_end_y));
+    engines_rocket_path_sink->AddBezier(BezierSegment(
+        Point2F(rocket.center.x - rocket.eng_ul_point_x, rocket.center.y + rocket.eng_ul_point_y),
+        Point2F(rocket.center.x - rocket.eng_ur_point_x, rocket.center.y + rocket.eng_ur_point_y),
+        Point2F(rocket.center.x - rocket.eng_start_x, rocket.center.y)));
+    engines_rocket_path_sink->EndFigure(D2D1_FIGURE_END_OPEN);
+    engines_rocket_path_sink->Close();
+
+
+    //Tworzenie gradientu linearnego dla rakiety
+    d2d_render_target->CreateLinearGradientBrush(
+        D2D1::LinearGradientBrushProperties(
+            D2D1::Point2F(rocket.center.x, rocket.center.y + 15),
+            D2D1::Point2F(rocket.center.x, rocket.center.y + 85)),
+        rockt_lin_grad_stops,
+        &rocket_lin_grad_brush
+    );
+
+    d2d_render_target->CreateLinearGradientBrush(
+        D2D1::LinearGradientBrushProperties(
+            D2D1::Point2F(rocket.center.x + body_r_end_x, rocket.center.y + 15),
+            D2D1::Point2F(rocket.center.x + body_r_end_x, rocket.center.y + 85)),
+        top_rockt_lin_grad_stops,
+        &top_rocket_lin_grad_brush
+    );
+
+    d2d_render_target->CreateLinearGradientBrush(
+        D2D1::LinearGradientBrushProperties(
+            D2D1::Point2F(rocket.center.x + body_r_end_x, rocket.center.y + 15),
+            D2D1::Point2F(rocket.center.x + body_r_end_x, rocket.center.y + 85)),
+        window_rockt_lin_grad_stops,
+        &window_rocket_lin_grad_brush
+    );
+
+    if (rockt_lin_grad_stops) rockt_lin_grad_stops->Release();
+    if (top_rockt_lin_grad_stops) top_rockt_lin_grad_stops->Release();
+    if (window_rockt_grad_stops_arr) window_rockt_lin_grad_stops->Release();
+}
+
+void release_paths()
+{
+    if (path_rocket_body) path_rocket_body->Release();
+    if (path_rocket_top) path_rocket_top->Release();
+    if (path_rocket_bottom) path_rocket_bottom->Release();
+    if (path_sink_rocket_body) path_sink_rocket_body->Release();
+    if (path_sink_rocket_top) path_sink_rocket_top->Release();
+    if (path_sink_rocket_bottom) path_sink_rocket_bottom->Release();
+    if (rocket_lin_grad_brush) rocket_lin_grad_brush->Release();
+    if (engines_rocket_path) engines_rocket_path->Release();
+    if (engines_rocket_path_sink) engines_rocket_path_sink->Release();
+    if (top_rocket_lin_grad_brush) top_rocket_lin_grad_brush->Release();
+    if (window_rocket_lin_grad_brush) window_rocket_lin_grad_brush->Release();
+    if (path_fire_t) path_fire_t->Release();
+    if (path_sink_fire_t) path_sink_fire_t->Release();
+    if (path_fire_m) path_fire_m->Release();
+    if (path_sink_fire_m) path_sink_fire_m->Release();
+    if (path_fire_b) path_fire_b->Release();
+    if (path_sink_fire_b) path_sink_fire_b->Release();
 }
 
 LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
@@ -192,6 +423,8 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
             initial_width = rc.right - rc.left;
         }
 
+        create_brushes();
+
         CoInitializeEx(nullptr, COINIT_APARTMENTTHREADED);
 
         HRESULT hr = CoCreateInstance(CLSID_WICImagingFactory, NULL, CLSCTX_INPROC_SERVER, IID_PPV_ARGS(&pWICFactory));
@@ -226,6 +459,8 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
         if (d2d_render_target) d2d_render_target->Release();
         if (d2d_factory) d2d_factory->Release();
 
+        release_brushes();
+
         PostQuitMessage(0);
         return 0;
     }
@@ -249,7 +484,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
             float random_y = offset + (rand() % range);
             asteroid = Asteroid(asteroid.bitmap, { (float)rc.right + random_size , random_y }, random_size);
             srand(time(NULL));
-            int random_speed = 5 + (rand() % 3);
+            int random_speed = 7 + (rand() % 3);
             if (score == 0 || score == -1)
                 random_speed = 5;
             asteroid.set_speed(random_speed);
@@ -262,210 +497,9 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
             ((initial_higth) / (rc.bottom - rc.top)), Point2F(0, 0));
         d2d_render_target->SetTransform(scale);
 
-        // Utworzenie pędzli
-        d2d_render_target->CreateSolidColorBrush(brush_color_black, &brush);
-        d2d_render_target->CreateSolidColorBrush(brush_dark_grey_color, &brush_dark_grey);
-        d2d_render_target->CreateSolidColorBrush(brush_color_red, &brush_red);
-        d2d_render_target->CreateSolidColorBrush(brush_color_white, &brush_white);
-        d2d_render_target->CreateSolidColorBrush(brush_color_blue, &brush_blue);
-        d2d_render_target->CreateSolidColorBrush(brush_color_yellow, &brush_yellow);
-        d2d_render_target->CreateSolidColorBrush(brush_color_light_orange, &brush_light_orange);
-        d2d_render_target->CreateSolidColorBrush(brush_color_orange, &brush_orange);
-        d2d_render_target->CreateSolidColorBrush(navy, &brush_navy);
-
-        ID2D1GradientStopCollection* rockt_lin_grad_stops = NULL;
-        D2D1_GRADIENT_STOP rockt_grad_stops_arr[2];
-        rockt_grad_stops_arr[0].color = light_grey_for_gradient;
-        rockt_grad_stops_arr[0].position = 0.f;
-        rockt_grad_stops_arr[1].color = grey_for_gradient;
-        rockt_grad_stops_arr[1].position = 1.0f;
-        // Create the ID2D1GradientStopCollection from a previously
-        // declared array of D2D1_GRADIENT_STOP structs.
-        d2d_render_target->CreateGradientStopCollection(
-            rockt_grad_stops_arr,
-            2,
-            D2D1_GAMMA_2_2,
-            D2D1_EXTEND_MODE_CLAMP,
-            &rockt_lin_grad_stops
-        );
-
-        //Kolory do gradientu linearnego dla topu rakiety
-        ID2D1GradientStopCollection* top_rockt_lin_grad_stops = NULL;
-        D2D1_GRADIENT_STOP top_rockt_grad_stops_arr[2];
-        top_rockt_grad_stops_arr[0].color = D2D1::ColorF(D2D1::ColorF::Red, 1);
-        top_rockt_grad_stops_arr[0].position = 0.0f;
-        top_rockt_grad_stops_arr[1].color = grey_for_gradient;
-        top_rockt_grad_stops_arr[1].position = 1.0f;
-        // Create the ID2D1GradientStopCollection from a previously
-        // declared array of D2D1_GRADIENT_STOP structs.
-        d2d_render_target->CreateGradientStopCollection(
-            top_rockt_grad_stops_arr,
-            2,
-            D2D1_GAMMA_2_2,
-            D2D1_EXTEND_MODE_CLAMP,
-            &top_rockt_lin_grad_stops
-        );
-
-        //Kolory do gradientu linearnego dla okna rakiety
-        ID2D1GradientStopCollection* window_rockt_lin_grad_stops = NULL;
-        D2D1_GRADIENT_STOP window_rockt_grad_stops_arr[2];
-        window_rockt_grad_stops_arr[0].color = brush_color_blue;
-        window_rockt_grad_stops_arr[0].position = 0.0f;
-        window_rockt_grad_stops_arr[1].color = grey_for_gradient;
-        window_rockt_grad_stops_arr[1].position = 1.0f;
-        // Create the ID2D1GradientStopCollection from a previously
-        // declared array of D2D1_GRADIENT_STOP structs.
-        d2d_render_target->CreateGradientStopCollection(
-            window_rockt_grad_stops_arr,
-            2,
-            D2D1_GAMMA_2_2,
-            D2D1_EXTEND_MODE_CLAMP,
-            &window_rockt_lin_grad_stops
-        );
-
-
-        rocket.set_attributes(120, 135, 47, 20, 60, 90, 90, 20, body_r_end_x + 50, body_r_end_x + 20, 35, body_l_end_x, body_l_end_x + 15,
-            body_ends_y, rocket.center.x + 40, 40, 12, 90, 95, 160, 100, 120, 90, 145, 125, 90, eng_ul_end_y - 10, 115, 95);
-
-        d2d_factory->CreatePathGeometry(&path_rocket_body);
-        path_rocket_body->Open(&path_sink_rocket_body);
-        path_sink_rocket_body->BeginFigure(Point2F(rocket.center.x - body_l_end_x, rocket.center.y - body_ends_y), D2D1_FIGURE_BEGIN_FILLED);
-        path_sink_rocket_body->AddBezier(BezierSegment(
-            Point2F(rocket.center.x - rocket.body_l_point_x, rocket.center.y - rocket.body_l_point_y),
-            Point2F(rocket.center.x + rocket.body_r_point_x, rocket.center.y - rocket.body_r_point_y), 
-            Point2F(rocket.center.x + body_r_end_x, rocket.center.y - body_ends_y)));
-        path_sink_rocket_body->AddQuadraticBezier(QuadraticBezierSegment(
-            Point2F(rocket.center.x + body_r_end_x - rocket.body_rounding_x, rocket.center.y), 
-            Point2F(rocket.center.x + body_r_end_x, rocket.center.y + body_ends_y)));
-        path_sink_rocket_body->AddBezier(BezierSegment(Point2F(rocket.center.x + rocket.body_r_point_x, rocket.center.y + rocket.body_r_point_y),
-            Point2F(rocket.center.x - rocket.body_l_point_x, rocket.center.y + rocket.body_l_point_y), 
-            Point2F(rocket.center.x - body_l_end_x, rocket.center.y + body_ends_y)));
-        path_sink_rocket_body->AddQuadraticBezier(QuadraticBezierSegment(
-            Point2F(rocket.center.x - body_l_end_x - rocket.body_rounding_x, rocket.center.y), 
-            Point2F(rocket.center.x - body_l_end_x, rocket.center.y - body_ends_y)));
-        path_sink_rocket_body->EndFigure(D2D1_FIGURE_END_OPEN);
-        path_sink_rocket_body->Close();
-
-        d2d_factory->CreatePathGeometry(&path_rocket_top);
-        path_rocket_top->Open(&path_sink_rocket_top);
-        path_sink_rocket_top->BeginFigure(Point2F(rocket.center.x + body_r_end_x, rocket.center.y - body_ends_y), D2D1_FIGURE_BEGIN_FILLED);
-        path_sink_rocket_top->AddQuadraticBezier(QuadraticBezierSegment(
-            Point2F(rocket.center.x + rocket.top_rounding_x, rocket.center.y - rocket.top_rounding_y), Point2F(rocket.center.x + rocket.top_end_x, rocket.center.y)));
-        path_sink_rocket_top->AddQuadraticBezier(QuadraticBezierSegment(
-            Point2F(rocket.center.x + rocket.top_rounding_x, rocket.center.y + rocket.top_rounding_y), Point2F(rocket.center.x + body_r_end_x, rocket.center.y + body_ends_y)));
-        path_sink_rocket_top->AddQuadraticBezier(QuadraticBezierSegment(
-            Point2F(rocket.center.x + rocket.body_rounding_x, rocket.center.y), Point2F(rocket.center.x + body_r_end_x, rocket.center.y - body_ends_y)));
-        path_sink_rocket_top->EndFigure(D2D1_FIGURE_END_OPEN);
-        path_sink_rocket_top->Close();
-
-        d2d_factory->CreatePathGeometry(&path_rocket_bottom);
-        path_rocket_bottom->Open(&path_sink_rocket_bottom);
-        path_sink_rocket_bottom->BeginFigure(Point2F(rocket.center.x - body_l_end_x, rocket.center.y - rocket.bot_ends_y), D2D1_FIGURE_BEGIN_FILLED);
-        path_sink_rocket_bottom->AddQuadraticBezier(QuadraticBezierSegment(
-            Point2F(rocket.center.x - body_l_end_x - rocket.body_rounding_x, rocket.center.y), Point2F(rocket.center.x - body_l_end_x, rocket.center.y + rocket.bot_ends_y)));
-        path_sink_rocket_bottom->AddLine(Point2F(rocket.center.x - rocket.bot_l_end_x, rocket.center.y + rocket.bot_ends_y));
-        path_sink_rocket_bottom->AddQuadraticBezier(QuadraticBezierSegment(
-            Point2F(rocket.center.x - rocket.bot_l_end_x - rocket.body_rounding_x, rocket.center.y), Point2F(rocket.center.x - rocket.bot_l_end_x, rocket.center.y - rocket.bot_ends_y)));
-        path_sink_rocket_bottom->AddLine(Point2F(rocket.center.x - rocket.bot_r_end_x, rocket.center.y - rocket.bot_ends_y));
-        path_sink_rocket_bottom->EndFigure(D2D1_FIGURE_END_OPEN);
-        path_sink_rocket_bottom->Close();
-
         
-        if (t_protrusion < 70) t_protrusion +=2; else t_protrusion = 0;
-        if (m_protrusion < 70) m_protrusion += 2; else m_protrusion = 0;
-        if (b_protrusion < 70) b_protrusion += 2; else b_protrusion = 0;
+        create_rocket_paths();
 
-        rocket.set_fire(150 + t_protrusion, 200 + t_protrusion, 160 + m_protrusion, 210 + m_protrusion, 140 + b_protrusion, 190 + b_protrusion,
-            rocket.body_ends_y, rocket.body_ends_y - 6, rocket.body_ends_y - 34, rocket.body_ends_y - 40,
-            rocket.body_ends_y - 28, rocket.body_ends_y - 28 - 6, rocket.body_ends_y - 28 - 34, rocket.body_ends_y - 28 - 40,
-            rocket.body_ends_y - 56, rocket.body_ends_y - 56 - 6, rocket.body_ends_y - 56 - 34, rocket.body_ends_y - 56 - 40);
-
-        d2d_factory->CreatePathGeometry(&path_fire_t);
-        path_fire_t->Open(&path_sink_fire_t);
-        path_sink_fire_t->BeginFigure(Point2F(rocket.center.x - rocket.bot_l_end_x, rocket.center.y - rocket.bot_ends_y), D2D1_FIGURE_BEGIN_FILLED);
-        path_sink_fire_t->AddLine(Point2F(rocket.center.x - rocket.t_end_line_x, rocket.center.y - rocket.tt_end_line_y));
-        path_sink_fire_t->AddBezier(BezierSegment(Point2F(rocket.center.x - rocket.t_top_end_x, rocket.center.y - rocket.t_topt_end_y),
-            Point2F(rocket.center.x - rocket.t_top_end_x, rocket.center.y - rocket.t_topb_end_y), 
-            Point2F(rocket.center.x - rocket.t_end_line_x, rocket.center.y - rocket.tb_end_line_y)));
-        path_sink_fire_t->AddLine(Point2F(rocket.center.x - rocket.bot_l_end_x, rocket.center.y - rocket.tb_end_line_y));
-        path_sink_fire_t->EndFigure(D2D1_FIGURE_END_OPEN);
-        path_sink_fire_t->Close();
-
-        d2d_factory->CreatePathGeometry(&path_fire_m);
-        path_fire_m->Open(&path_sink_fire_m);
-        path_sink_fire_m->BeginFigure(Point2F(rocket.center.x - rocket.bot_l_end_x, rocket.center.y - rocket.mt_end_line_y), D2D1_FIGURE_BEGIN_FILLED);
-        path_sink_fire_m->AddLine(Point2F(rocket.center.x - rocket.m_end_line_x, rocket.center.y - rocket.mt_end_line_y));
-        path_sink_fire_m->AddBezier(BezierSegment(Point2F(rocket.center.x - rocket.m_top_end_x, rocket.center.y - rocket.m_topt_end_y),
-            Point2F(rocket.center.x - rocket.m_top_end_x, rocket.center.y - rocket.m_topb_end_y), 
-            Point2F(rocket.center.x - rocket.m_end_line_x, rocket.center.y - rocket.mb_end_line_y)));
-        path_sink_fire_m->AddLine(Point2F(rocket.center.x - rocket.bot_l_end_x, rocket.center.y - rocket.mb_end_line_y));
-        path_sink_fire_m->EndFigure(D2D1_FIGURE_END_OPEN);
-        path_sink_fire_m->Close();
-
-        d2d_factory->CreatePathGeometry(&path_fire_b);
-        path_fire_b->Open(&path_sink_fire_b);
-        path_sink_fire_b->BeginFigure(Point2F(rocket.center.x - rocket.bot_l_end_x, rocket.center.y - rocket.bt_end_line_y), D2D1_FIGURE_BEGIN_FILLED);
-        path_sink_fire_b->AddLine(Point2F(rocket.center.x - rocket.b_end_line_x, rocket.center.y - rocket.bt_end_line_y));
-        path_sink_fire_b->AddBezier(BezierSegment(Point2F(rocket.center.x - rocket.b_top_end_x, rocket.center.y - rocket.b_topt_end_y),
-            Point2F(rocket.center.x - rocket.b_top_end_x, rocket.center.y - rocket.b_topb_end_y), 
-            Point2F(rocket.center.x - rocket.b_end_line_x, rocket.center.y - rocket.bb_end_line_y)));
-        path_sink_fire_b->AddLine(Point2F(rocket.center.x - rocket.bot_l_end_x, rocket.center.y - rocket.bb_end_line_y));
-        path_sink_fire_b->EndFigure(D2D1_FIGURE_END_OPEN);
-        path_sink_fire_b->Close();
-
-
-        const D2D1_ELLIPSE ell = Ellipse(Point2F(rocket.centr_windw_x, rocket.center.y), rocket.window_r, rocket.window_r);
-
-
-        d2d_factory->CreatePathGeometry(&engines_rocket_path);
-        engines_rocket_path->Open(&engines_rocket_path_sink);
-        engines_rocket_path_sink->BeginFigure(Point2F(rocket.center.x - rocket.eng_start_x, rocket.center.y), D2D1_FIGURE_BEGIN_FILLED);
-        engines_rocket_path_sink->AddBezier(BezierSegment(
-            Point2F(rocket.center.x - rocket.eng_ur_point_x, rocket.center.y - rocket.eng_ur_point_y),
-            Point2F(rocket.center.x - rocket.eng_ul_point_x, rocket.center.y - rocket.eng_ul_point_y), 
-            Point2F(rocket.center.x - rocket.eng_l_end_x, rocket.center.y - eng_ul_end_y)));
-        engines_rocket_path_sink->AddLine(Point2F(rocket.center.x - rocket.eng_l_end_x, rocket.center.y - rocket.eng_dl_end_y));
-        engines_rocket_path_sink->AddBezier(BezierSegment(
-            Point2F(rocket.center.x - rocket.eng_dl_point_x, rocket.center.y - rocket.eng_dl_point_y),
-            Point2F(rocket.center.x - rocket.eng_dr_point_x, rocket.center.y - rocket.eng_dr_point_y), 
-            Point2F(rocket.center.x - rocket.eng_mid_point_x, rocket.center.y)));
-        engines_rocket_path_sink->AddBezier(BezierSegment(
-            Point2F(rocket.center.x - rocket.eng_dr_point_x, rocket.center.y + rocket.eng_dr_point_y),
-            Point2F(rocket.center.x - rocket.eng_dl_point_x, rocket.center.y + rocket.eng_dl_point_y), 
-            Point2F(rocket.center.x - rocket.eng_l_end_x, rocket.center.y + rocket.eng_dl_end_y)));
-        engines_rocket_path_sink->AddLine(Point2F(rocket.center.x - rocket.eng_l_end_x, rocket.center.y + eng_ul_end_y));
-        engines_rocket_path_sink->AddBezier(BezierSegment(
-            Point2F(rocket.center.x - rocket.eng_ul_point_x, rocket.center.y + rocket.eng_ul_point_y),
-            Point2F(rocket.center.x - rocket.eng_ur_point_x, rocket.center.y + rocket.eng_ur_point_y), 
-            Point2F(rocket.center.x - rocket.eng_start_x, rocket.center.y)));
-        engines_rocket_path_sink->EndFigure(D2D1_FIGURE_END_OPEN);
-        engines_rocket_path_sink->Close();
-
-
-        //Tworzenie gradientu linearnego dla rakiety
-        d2d_render_target->CreateLinearGradientBrush(
-            D2D1::LinearGradientBrushProperties(
-                D2D1::Point2F(rocket.center.x, rocket.center.y + 15),
-                D2D1::Point2F(rocket.center.x, rocket.center.y + 85)),
-            rockt_lin_grad_stops,
-            &rocket_lin_grad_brush
-        );
-
-        d2d_render_target->CreateLinearGradientBrush(
-            D2D1::LinearGradientBrushProperties(
-                D2D1::Point2F(rocket.center.x + body_r_end_x, rocket.center.y + 15),
-                D2D1::Point2F(rocket.center.x + body_r_end_x, rocket.center.y + 85)),
-            top_rockt_lin_grad_stops,
-            &top_rocket_lin_grad_brush
-        );
-
-        d2d_render_target->CreateLinearGradientBrush(
-            D2D1::LinearGradientBrushProperties(
-                D2D1::Point2F(rocket.center.x + body_r_end_x, rocket.center.y + 15),
-                D2D1::Point2F(rocket.center.x + body_r_end_x, rocket.center.y + 85)),
-            window_rockt_lin_grad_stops,
-            &window_rocket_lin_grad_brush
-        );
 
         planet_saturn_pink.set_center({ (float)rc.right - 200, (float)rc.top + 200 }, 125);
         clouds.set_center({ (float)rc.right - 400, (float)rc.top + 200 }, 335, 200);
@@ -595,34 +629,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 
         d2d_render_target->EndDraw();
 
-        if (brush) brush->Release();
-        if (brush_dark_grey) brush_dark_grey->Release();
-        if (path_rocket_body) path_rocket_body->Release();
-        if (path_rocket_top) path_rocket_top->Release();
-        if (path_rocket_bottom) path_rocket_bottom->Release();
-        if (path_sink_rocket_body) path_sink_rocket_body->Release();
-        if (path_sink_rocket_top) path_sink_rocket_top->Release();
-        if (path_sink_rocket_bottom) path_sink_rocket_bottom->Release();
-        if (rocket_lin_grad_brush) rocket_lin_grad_brush->Release();
-        if (engines_rocket_path) engines_rocket_path->Release();
-        if (engines_rocket_path_sink) engines_rocket_path_sink->Release();
-        if (brush_blue) brush_blue->Release();
-        if (brush_red) brush_red->Release();
-        if (brush_yellow) brush_yellow->Release();
-        if (brush_light_orange) brush_light_orange->Release();
-        if (brush_orange) brush_orange->Release();
-        if (brush_white) brush_white->Release();
-        if (rockt_lin_grad_stops) rockt_lin_grad_stops->Release();
-        if (top_rocket_lin_grad_brush) top_rocket_lin_grad_brush->Release();
-        if (top_rockt_lin_grad_stops) top_rockt_lin_grad_stops->Release();
-        if (window_rocket_lin_grad_brush) window_rocket_lin_grad_brush->Release();
-        if (window_rockt_grad_stops_arr) window_rockt_lin_grad_stops->Release();
-        if (path_fire_t) path_fire_t->Release();
-        if (path_sink_fire_t) path_sink_fire_t->Release();
-        if (path_fire_m) path_fire_m->Release();
-        if (path_sink_fire_m) path_sink_fire_m->Release();
-        if (path_fire_b) path_fire_b->Release();
-        if (path_sink_fire_b) path_sink_fire_b->Release();
+        release_paths();
     }
 
     return 0;
@@ -641,8 +648,7 @@ void release_resources(ID2D1SolidColorBrush* brush, ID2D1SolidColorBrush* brush_
     ID2D1PathGeometry* path_fire_t, ID2D1PathGeometry* path_sink_fire_t, ID2D1PathGeometry* path_fire_m,
     ID2D1PathGeometry* path_sink_fire_m, ID2D1PathGeometry* path_fire_b, ID2D1PathGeometry* path_sink_fire_b)
 {
-    if (brush) brush->Release();
-    if (brush_dark_grey) brush_dark_grey->Release();
+
     if (path_rocket_body) path_rocket_body->Release();
     if (path_rocket_top) path_rocket_top->Release();
     if (path_rocket_bottom) path_rocket_bottom->Release();
