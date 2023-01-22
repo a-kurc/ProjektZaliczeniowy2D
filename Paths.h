@@ -1,4 +1,6 @@
 #pragma once
+#ifndef PATHS
+#define PATHS
 
 #include "projekt_zal.h"
 
@@ -17,3 +19,6 @@ ID2D1PathGeometry* path_fire_b = nullptr;
 ID2D1GeometrySink* path_sink_fire_t = nullptr;
 ID2D1GeometrySink* path_sink_fire_m = nullptr;
 ID2D1GeometrySink* path_sink_fire_b = nullptr;
+
+
+#endif // !PATHS

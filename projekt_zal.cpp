@@ -15,6 +15,11 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 
 Asteroid asteroid(NULL, { 500, 500 }, 100);
 Planet planet_saturn_pink(NULL);
+Rocket rocket;
+CloudsOrStars clouds(NULL);
+CloudsOrStars stars1(NULL);
+CloudsOrStars stars2(NULL);
+CloudsOrStars stars_bck(NULL);
 
 int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PWSTR pCmdLine, int nCmdShow)
 {
