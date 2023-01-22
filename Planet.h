@@ -1,6 +1,8 @@
 #pragma once
+#ifndef PLANET
+#define PLANET
 
-#include "projekt_zal.h"
+#include <d2d1.h>
 
 class Planet
 {
@@ -13,22 +15,11 @@ public:
     float bottom_end;
     int size;
 
-    Planet(ID2D1Bitmap* bitmap) : bitmap(bitmap) {};
+    Planet(ID2D1Bitmap* bitmap);
 
-    void set_bitmap(ID2D1Bitmap* bitmap)
-    {
-        this->bitmap = bitmap;
-    }
+    void set_bitmap(ID2D1Bitmap* bitmap);
 
-    void set_center(D2D1_POINT_2F center, int size)
-    {
-        this->center = center;
-        this->left_end = center.x - size;
-        this->right_end = center.x + size;
-        this->top_end = center.y - size;
-        this->bottom_end = center.y + size;
-        this->size = size;
-    }
+    void set_center(D2D1_POINT_2F center, int size);
 };
 
-Planet planet_saturn_pink(NULL);
+#endif // !PLANET

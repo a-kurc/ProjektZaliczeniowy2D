@@ -140,7 +140,9 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="Planet.cpp" />
     <ClCompile Include="projekt_zal.cpp" />
+    <ClCompile Include="Rocket.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Asteroid.h" />

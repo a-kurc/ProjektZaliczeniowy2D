@@ -1,5 +1,9 @@
 #pragma once
 
+#ifndef ROCKET
+#define ROCKET
+
+
 #include "projekt_zal.h"
 
 class Rocket
@@ -136,3 +140,4 @@ public:
 
 Rocket rocket;
 
+#endif // !ROCKET
