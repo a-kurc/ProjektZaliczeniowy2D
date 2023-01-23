@@ -1,5 +1,6 @@
 #include "Planet.h"
 
+
 void Planet::set_bitmap(ID2D1Bitmap* bitmap)
 {
 	this->bitmap = bitmap;

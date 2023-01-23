@@ -2,7 +2,8 @@
 #ifndef PATHS
 #define PATHS
 
-#include "projekt_zal.h"
+#include <d2d1.h>
+
 
 // - Interfejsy do obs³ugi œcie¿ki
 ID2D1PathGeometry* path_rocket_body = nullptr;

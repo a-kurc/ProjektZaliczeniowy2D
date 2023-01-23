@@ -1,6 +1,9 @@
 #pragma once
+#ifndef COLORS
+#define COLORS
 
-#include "projekt_zal.h"
+#include <d2d1.h>
+
 
 ID2D1SolidColorBrush* brush = nullptr;
 ID2D1SolidColorBrush* brush_dark_grey = nullptr;
@@ -32,3 +35,5 @@ ID2D1LinearGradientBrush* window_rocket_lin_grad_brush = nullptr;
 //Kolory do gradientu linearnego dla rakiety
 D2D1_COLOR_F const grey_for_gradient = { .r = 0.2f, .g = 0.2f, .b = 0.2f, .a = 1.0f };
 D2D1_COLOR_F const light_grey_for_gradient = { .r = 0.98f, .g = 0.98f, .b = 0.98f, .a = 1.0f };
+
+#endif //!COLORS

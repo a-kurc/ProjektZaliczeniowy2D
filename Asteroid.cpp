@@ -1,5 +1,6 @@
 #include "Asteroid.h"
 
+
 Asteroid::Asteroid(ID2D1Bitmap* bitmap, D2D1_POINT_2F center, int size)
 {
     this->bitmap = bitmap;

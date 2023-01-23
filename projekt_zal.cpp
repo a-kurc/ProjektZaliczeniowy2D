@@ -8,10 +8,10 @@
 #include "CloudsOrStars.h"
 #include "Colors.h"
 #include "Paths.h"
+#include "projekt_zal.h"
 
 using namespace globals;
 
-LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 
 Asteroid asteroid(NULL, { 500, 500 }, 100);
 Planet planet_saturn_pink(NULL);
@@ -21,13 +21,13 @@ CloudsOrStars stars1(NULL);
 CloudsOrStars stars2(NULL);
 CloudsOrStars stars_bck(NULL);
 
+
 int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PWSTR pCmdLine, int nCmdShow)
 {
     // Register the window class.
     const wchar_t CLASS_NAME[] = L"Sample Window Class";
 
     WNDCLASS wc = { };
-
     wc.lpfnWndProc = WindowProc;
     wc.hInstance = hInstance;
     wc.lpszClassName = CLASS_NAME;
@@ -139,6 +139,7 @@ void create_brushes()
     d2d_render_target->CreateSolidColorBrush(brush_color_orange, &brush_orange);
     d2d_render_target->CreateSolidColorBrush(navy, &brush_navy);
 }
+
 
 void release_rendertarget_factory_and_brushes()
 {
@@ -254,7 +255,6 @@ void create_rocket_paths()
     path_sink_rocket_bottom->EndFigure(D2D1_FIGURE_END_OPEN);
     path_sink_rocket_bottom->Close();
 
-
     if (t_protrusion < 70) t_protrusion += 4; else t_protrusion = 0;
     if (m_protrusion < 70) m_protrusion += 4; else m_protrusion = 0;
     if (b_protrusion < 70) b_protrusion += 4; else b_protrusion = 0;
@@ -297,9 +297,7 @@ void create_rocket_paths()
     path_sink_fire_b->EndFigure(D2D1_FIGURE_END_OPEN);
     path_sink_fire_b->Close();
 
-
     ell = Ellipse(Point2F(rocket.centr_windw_x, rocket.center.y), rocket.window_r, rocket.window_r);
-
 
     d2d_factory->CreatePathGeometry(&engines_rocket_path);
     engines_rocket_path->Open(&engines_rocket_path_sink);
@@ -324,7 +322,6 @@ void create_rocket_paths()
         Point2F(rocket.center.x - rocket.eng_start_x, rocket.center.y)));
     engines_rocket_path_sink->EndFigure(D2D1_FIGURE_END_OPEN);
     engines_rocket_path_sink->Close();
-
 
     //Tworzenie gradientu linearnego dla rakiety
     d2d_render_target->CreateLinearGradientBrush(
@@ -356,6 +353,7 @@ void create_rocket_paths()
     if (window_rockt_grad_stops_arr) window_rockt_lin_grad_stops->Release();
 }
 
+
 void release_paths()
 {
     if (path_rocket_body) path_rocket_body->Release();
@@ -377,6 +375,7 @@ void release_paths()
     if (path_sink_fire_b) path_sink_fire_b->Release();
 }
 
+
 void asteroid_out_of_window()
 {
     int random_size = 80 + (rand() % 60);
@@ -392,6 +391,7 @@ void asteroid_out_of_window()
     score += 1;
 }
 
+
 void handle_rocket_moves() 
 {
     if (GetAsyncKeyState(VK_RIGHT) < 0)
@@ -404,12 +404,14 @@ void handle_rocket_moves()
         rocket.move_down();
 }
 
+
 void set_size_of_window()
 {
     Matrix3x2F scale = Matrix3x2F::Scale((initial_width) / (rc.right - rc.left),
         ((initial_higth) / (rc.bottom - rc.top)), Point2F(0, 0));
     d2d_render_target->SetTransform(scale);
 }
+
 
 void set_centers_of_bitmaps()
 {
@@ -419,6 +421,7 @@ void set_centers_of_bitmaps()
     stars2.set_center({ (float)rc.left + 300, (float)rc.bottom - 100 }, 305, 120);
     stars_bck.set_center({ half_x, half_y }, half_x + 70, half_y + 60);
 }
+
 
 void handle_game_over(HWND hwnd)
 {
@@ -450,7 +453,6 @@ void handle_game_over(HWND hwnd)
         brush_white
     );
 
-
     POINT cursor_pos;
     GetCursorPos(&cursor_pos);
 
@@ -471,6 +473,7 @@ void handle_game_over(HWND hwnd)
         }
     }
 }
+
 
 void write_score()
 {
@@ -497,12 +500,14 @@ void write_score()
     );
 }
 
+
 void draw_background()
 {
     d2d_render_target->FillRectangle(D2D1::RectF(0, 0, rc.right, rc.bottom), brush_navy);
     d2d_render_target->DrawBitmap(stars_bck.bitmap, D2D1::RectF(stars_bck.left_end, stars_bck.top_end,
         stars_bck.right_end, stars_bck.bottom_end));
 }
+
 
 void draw_everything()
 {
@@ -539,6 +544,7 @@ void draw_everything()
     d2d_render_target->FillEllipse(ell, window_rocket_lin_grad_brush);
 }
 
+
 int load_bitmaps(HWND hwnd)
 {
     CoInitializeEx(nullptr, COINIT_APARTMENTTHREADED);
@@ -569,12 +575,12 @@ int load_bitmaps(HWND hwnd)
     stars_bck.bitmap = load_bitmap(hwnd, hr, name, stars2.bitmap, pWICFactory);
 }
 
+
 LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
     GetClientRect(hwnd, &rc);
     half_y = (rc.bottom - rc.top) / 2;
     half_x = (rc.right - rc.left) / 2;
-
 
     switch (uMsg)
     {
@@ -641,7 +647,6 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
         release_paths();
         return 0;
     }
-
     return 0;
     }
     return DefWindowProc(hwnd, uMsg, wParam, lParam);

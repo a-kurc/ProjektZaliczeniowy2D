@@ -1,6 +1,9 @@
 #pragma once
+#ifndef CLOUDSORSTARS
+#define CLOUDSORSTARS
 
 #include <d2d1.h>
+
 
 class CloudsOrStars
 {
@@ -21,3 +24,4 @@ public:
     void set_center(D2D1_POINT_2F center, int size_x, int size_y);
 };
 
+#endif
